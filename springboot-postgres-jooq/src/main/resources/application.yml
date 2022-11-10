@@ -1,0 +1,22 @@
+server:
+  port: 8081
+
+multi:
+  tenancy:
+    tenant-identifier: tenant_id
+    tables:
+      - public.t_user
+      - public.t_order
+    sql-check-filters-exist: true
+    sql-auto-add-filters: true
+
+logging:
+  level:
+    com.example.multitenancylibrary: DEBUG
+
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/postgres
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver

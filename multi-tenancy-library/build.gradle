@@ -1,0 +1,33 @@
+apply plugin: 'maven-publish'
+
+repositories {
+    mavenCentral()
+}
+
+tasks.named("jar") {
+    archiveClassifier = ''
+}
+
+publishing {
+    publications {
+        library(MavenPublication) {
+            groupId = 'com.multi'
+            artifactId = 'tenancy'
+            version = '0.0.1-SNAPSHOT'
+
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    implementation 'com.github.jsqlparser:jsqlparser:4.5'
+}
