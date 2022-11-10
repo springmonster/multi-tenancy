@@ -15,27 +15,35 @@
 ## Install PostgreSQL with Docker
 
 ```
+docker run --name postgres -e POSTGRES_PASSWORD=123456 -e TZ=PRC -p 5432:5432 postgres:latest
 ```
 
 ## Create Table and Insert Data into Table
 
-- execute sql in [ddl.sql](./springboot-postgres-jooq/sql/ddl.sql)
+- execute SQL in [ddl.sql](./springboot-postgres-jooq/sql/ddl.sql)
 
 ## Start application
 
-- execute http request in [rest-api.http](./springboot-postgres-jooq/rest-api.http)
+- run `multi-tenancy-library` publish task to make sure `multi-tenancy-library.jar` installed to maven local repository
+- start application
 
 ## Check result
+
+- execute http request in [rest-api.http](./springboot-postgres-jooq/rest-api.http) to check results
 
 ## Configuration
 
 ```yaml
 multi:
   tenancy:
+    # tenant table tenant related column name
     tenant-identifier: tenant_id
+    # tenant tables
     tables:
       - public.t_user
       - public.t_order
+    # check tenant condition exist in SQL or not
     sql-check-filters-exist: true
+    # auto add tenant condition to SQL
     sql-auto-add-filters: true
 ```
