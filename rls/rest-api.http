@@ -1,0 +1,35 @@
+### 0 create user
+POST http://localhost:8082/user/create
+Content-Type: application/json
+X-TenantID: 4
+
+{
+  "userId": "uid5",
+  "tenantId": 4,
+  "userName": "uname5"
+}
+
+### 1 get all users
+GET http://localhost:8082/users
+Content-Type: application/json
+X-TenantID: 2
+
+### 2 get all orders
+GET http://localhost:8082/orders
+Content-Type: application/json
+X-TenantID: 1
+
+### 3 get users and orders
+GET http://localhost:8082/users-orders
+Content-Type: application/json
+X-TenantID: 1
+
+### 4 update user
+PUT http://localhost:8082/user/uid5?username=james bond
+Content-Type: application/json
+X-TenantID: 4
+
+### 5 delete user
+DELETE http://localhost:8082/user/uid5
+Content-Type: application/json
+X-TenantID: 4

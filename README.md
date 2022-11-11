@@ -1,11 +1,5 @@
 # Getting Started
 
-## Description
-
-- Same database, same schema, same table, filter by `tenant_id` column
-- Auto extend SQL, add `where tenant_id in` or `and tenant_id in` conditions
-- Check tenant_id related conditions when we `select`,`update`, `delete` tenant tables
-
 ## Technology
 
 - Spring boot
@@ -18,20 +12,27 @@
 docker run --name postgres -e POSTGRES_PASSWORD=123456 -e TZ=PRC -p 5432:5432 postgres:latest
 ```
 
-## Create Table and Insert Data into Table
+## Application Implementation
+
+- Same database, same schema, same table, filter by `tenant_id` column
+- Auto extend SQL, add `where tenant_id in` or `and tenant_id in` conditions
+- Check tenant_id related conditions when we `select`,`update`, `delete` tenant tables
+- See [multi-tenancy-library](./multi-tenancy-library) and [springboot-postgres-jooq](./springboot-postgres-jooq)
+
+### Create Table and Insert Data into Table
 
 - execute SQL in [ddl.sql](./springboot-postgres-jooq/sql/ddl.sql)
 
-## Start application
+### Start application
 
 - run `multi-tenancy-library` publish task to make sure `multi-tenancy-library.jar` installed to maven local repository
 - start application
 
-## Check result
+### Check result
 
 - execute http request in [rest-api.http](./springboot-postgres-jooq/rest-api.http) to check results
 
-## Configuration
+### Configuration
 
 ```yaml
 multi:
@@ -47,3 +48,9 @@ multi:
     # auto add tenant condition to SQL
     sql-auto-add-filters: true
 ```
+
+## Row Level Security Implementation
+
+- Same database, same schema, same table, filter by `tenant_id` column
+- Using PostgreSQL Row Level Security
+- See [rls](./rls)
