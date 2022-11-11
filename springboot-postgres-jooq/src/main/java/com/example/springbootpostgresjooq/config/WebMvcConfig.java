@@ -18,6 +18,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
             @Override
             public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
                 String tenantID = request.getHeader("X-TenantID");
+                if (null == tenantID) {
+                    throw new RuntimeException("Tenant ID must not be null!");
+                }
                 ThreadLocalStorage.setTenantID(Integer.valueOf(tenantID));
                 return true;
             }

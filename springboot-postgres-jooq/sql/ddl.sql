@@ -4,6 +4,7 @@ CREATE TABLE public.t_user
     id        serial4 NOT NULL,
     user_id   varchar NOT NULL,
     tenant_id int4    NOT NULL,
+    user_name varchar NOT NULL,
     CONSTRAINT t_user_pk PRIMARY KEY (id)
 );
 
@@ -19,20 +20,20 @@ CREATE TABLE public.t_order
 
 --- INSERT USER DATA ---
 INSERT INTO public.t_user
-    (user_id, tenant_id)
-VALUES ('uid1', 1);
+    (user_id, tenant_id, user_name)
+VALUES ('uid1', 1, 'uname1');
 
 INSERT INTO public.t_user
-    (user_id, tenant_id)
-VALUES ('uid2', 1);
+    (user_id, tenant_id, user_name)
+VALUES ('uid2', 1, 'uname2');
 
 INSERT INTO public.t_user
-    (user_id, tenant_id)
-VALUES ('uid3', 2);
+    (user_id, tenant_id, user_name)
+VALUES ('uid3', 2, 'uname3');
 
 INSERT INTO public.t_user
-    (user_id, tenant_id)
-VALUES ('uid4', 3);
+    (user_id, tenant_id, user_name)
+VALUES ('uid4', 3, 'uname4');
 
 --- INSERT ORDER DATA ---
 INSERT INTO public.t_order
