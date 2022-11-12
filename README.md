@@ -3,10 +3,10 @@
 ## Technology
 
 - Spring boot
-- PostgreSQL
+- Postgresql
 - Jooq
 
-## Install PostgreSQL with Docker
+## Install Postgresql with Docker
 
 ```
 docker run --name postgres -e POSTGRES_PASSWORD=123456 -e TZ=PRC -p 5432:5432 postgres:latest
@@ -21,16 +21,17 @@ docker run --name postgres -e POSTGRES_PASSWORD=123456 -e TZ=PRC -p 5432:5432 po
 
 ### Create Table and Insert Data into Table
 
-- execute SQL in [ddl.sql](./springboot-postgres-jooq/sql/ddl.sql)
+- Execute SQL in [ddl.sql](./springboot-postgres-jooq/sql/ddl.sql)
 
-### Start application
+### Start Application
 
-- run `multi-tenancy-library` publish task to make sure `multi-tenancy-library.jar` installed to maven local repository
-- start application
+- Run [multi-tenancy-library](./multi-tenancy-library) publish task to make sure `multi-tenancy-library.jar` installed
+  to maven local repository
+- Start [springboot-postgres-jooq](./springboot-postgres-jooq) application
 
-### Check result
+### Check Results
 
-- execute http request in [rest-api.http](./springboot-postgres-jooq/rest-api.http) to check results
+- Execute http request in [rest-api.http](./springboot-postgres-jooq/rest-api.http) to check results
 
 ### Configuration
 
@@ -54,3 +55,19 @@ multi:
 - Same database, same schema, same table, filter by `tenant_id` column
 - Using PostgreSQL Row Level Security
 - See [rls](./rls)
+
+### Create Table and Insert Data into Table
+
+- Execute SQL in [ddl.sql](./rls/sql/ddl.sql)
+
+### Enable RLS and Add Policies
+
+- Execute SQL in [policies.sql](./rls/sql/policies.sql)
+
+### Start Application
+
+- Start [rls](./rls) application
+
+### Check Results
+
+- Execute http request in [rest-api.http](./rls/rest-api.http) to check results
