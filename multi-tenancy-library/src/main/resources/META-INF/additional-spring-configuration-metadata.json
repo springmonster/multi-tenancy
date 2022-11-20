@@ -1,6 +1,11 @@
 {
   "properties": [
     {
+      "name": "multi.tenancy.enable",
+      "type": "java.lang.Boolean",
+      "description": "enable multi tenancy"
+    },
+    {
       "name": "multi.tenancy.sql-check-filters-exist",
       "type": "java.lang.Boolean",
       "description": "enable sql check filters exist"

@@ -77,7 +77,7 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
                     || isConditionExistInSQL(originalSQL, createAndEqCondition(tableName));
 
             if (!isConditionExist) {
-                throw new TenantIDException("Tenant conditions does not exist");
+                throw new TenantIDException("Tenant conditions does not exist in table " + tableName);
             }
         }
     }
