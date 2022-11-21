@@ -39,7 +39,7 @@ docker run --name postgres -e POSTGRES_PASSWORD=123456 -e TZ=PRC -p 5432:5432 po
 multi:
   tenancy:
     # enable multi tenancy
-    enable: true
+    enabled: true
     # tenant table tenant related column name
     tenant-identifier: tenant_id
     # tenant tables
