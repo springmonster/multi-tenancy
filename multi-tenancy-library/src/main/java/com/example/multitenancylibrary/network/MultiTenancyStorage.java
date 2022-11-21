@@ -1,8 +1,8 @@
 package com.example.multitenancylibrary.network;
 
-public class ThreadLocalStorage {
+public class MultiTenancyStorage {
 
-    private ThreadLocalStorage() {
+    private MultiTenancyStorage() {
     }
 
     private static final ThreadLocal<Integer> tenant = new InheritableThreadLocal<>();

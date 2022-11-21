@@ -1,6 +1,6 @@
 package com.example.springbootpostgresjooq.config;
 
-import com.example.multitenancylibrary.network.ThreadLocalStorage;
+import com.example.multitenancylibrary.network.MultiTenancyStorage;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -21,13 +21,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 if (null == tenantID) {
                     throw new RuntimeException("Tenant ID must not be null!");
                 }
-                ThreadLocalStorage.setTenantID(Integer.valueOf(tenantID));
+                MultiTenancyStorage.setTenantID(Integer.valueOf(tenantID));
                 return true;
             }
 
             @Override
             public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-                ThreadLocalStorage.setTenantID(null);
+                MultiTenancyStorage.setTenantID(null);
             }
         });
     }

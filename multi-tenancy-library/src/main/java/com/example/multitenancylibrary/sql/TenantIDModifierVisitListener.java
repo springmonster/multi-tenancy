@@ -1,7 +1,7 @@
 package com.example.multitenancylibrary.sql;
 
 import com.example.multitenancylibrary.config.MultiTenancyProperties;
-import com.example.multitenancylibrary.network.ThreadLocalStorage;
+import com.example.multitenancylibrary.network.MultiTenancyStorage;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultVisitListener;
@@ -163,7 +163,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     }
 
     void addTenantInformation(VisitContext context) {
-        Integer tenantID = ThreadLocalStorage.getTenantID();
+        Integer tenantID = MultiTenancyStorage.getTenantID();
         if (tenantID != null) {
             for (String table : multiTenancyProperties.getTables()) {
                 String schemaName = table.split("\\.")[0];

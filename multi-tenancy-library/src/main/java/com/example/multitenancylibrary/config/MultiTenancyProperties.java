@@ -9,8 +9,8 @@ import java.util.List;
 @Configuration
 @ConfigurationProperties(prefix = "multi.tenancy")
 public class MultiTenancyProperties {
-    @Value("${enable:false}")
-    private boolean enable;
+    @Value("${enabled:false}")
+    private boolean enabled;
     @Value("${sql-check-filters-exist:false}")
     private boolean sqlCheckFiltersExist;
     @Value("${sql-auto-add-filters:false}")
@@ -30,12 +30,12 @@ public class MultiTenancyProperties {
         this.sqlCheckFiltersExist = sqlCheckFiltersExist;
     }
 
-    public boolean isEnable() {
-        return enable;
+    public boolean isEnabled() {
+        return enabled;
     }
 
-    public void setEnable(boolean enable) {
-        this.enable = enable;
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public boolean isSqlAutoAddFilters() {

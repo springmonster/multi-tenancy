@@ -21,14 +21,14 @@ public class MultiTenancyAutoConfigure {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "multi.tenancy", value = {"enable", "sql-auto-add-filters"}, havingValue = "true")
+    @ConditionalOnProperty(prefix = "multi.tenancy", value = {"enabled", "sql-auto-add-filters"}, havingValue = "true")
     public VisitListenerProvider visitListenerProvider() {
         return () -> new TenantIDModifierVisitListener(multiTenancyProperties);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "multi.tenancy", value = {"enable", "sql-check-filters-exist"}, havingValue = "true")
+    @ConditionalOnProperty(prefix = "multi.tenancy", value = {"enabled", "sql-check-filters-exist"}, havingValue = "true")
     public ExecuteListenerProvider executeListenerProvider() {
         return () -> new TenantIDCheckerExecuteListener(multiTenancyProperties);
     }

@@ -1,6 +1,6 @@
 package com.example.multitenancylibrary.config;
 
-import com.example.multitenancylibrary.network.ThreadLocalStorage;
+import com.example.multitenancylibrary.network.MultiTenancyStorage;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -17,13 +17,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
             @Override
             public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
                 String tenantID = request.getHeader("X-TenantID");
-                ThreadLocalStorage.setTenantID(Integer.valueOf(tenantID));
+                MultiTenancyStorage.setTenantID(Integer.valueOf(tenantID));
                 return true;
             }
 
             @Override
             public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-                ThreadLocalStorage.setTenantID(null);
+                MultiTenancyStorage.setTenantID(null);
             }
         });
     }

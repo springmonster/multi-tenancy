@@ -3,7 +3,7 @@ server:
 
 multi:
   tenancy:
-    enable: true
+    enabled: true
     tenant-identifier: tenant_id
     tables:
       - public.t_user

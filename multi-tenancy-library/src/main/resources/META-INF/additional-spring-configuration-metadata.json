@@ -1,7 +1,7 @@
 {
   "properties": [
     {
-      "name": "multi.tenancy.enable",
+      "name": "multi.tenancy.enabled",
       "type": "java.lang.Boolean",
       "description": "enable multi tenancy"
     },
