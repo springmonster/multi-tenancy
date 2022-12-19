@@ -2,7 +2,13 @@ package com.example.multitenancylibrary.sql;
 
 import com.example.multitenancylibrary.config.MultiTenancyProperties;
 import com.example.multitenancylibrary.network.MultiTenancyStorage;
-import org.jooq.*;
+import org.jooq.Clause;
+import org.jooq.Condition;
+import org.jooq.Field;
+import org.jooq.Operator;
+import org.jooq.QueryPart;
+import org.jooq.Table;
+import org.jooq.VisitContext;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultVisitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +20,17 @@ import java.util.Deque;
 import java.util.List;
 
 import static java.util.Arrays.asList;
-import static org.jooq.Clause.*;
+import static org.jooq.Clause.DELETE;
+import static org.jooq.Clause.DELETE_DELETE;
+import static org.jooq.Clause.DELETE_WHERE;
+import static org.jooq.Clause.INSERT;
+import static org.jooq.Clause.SELECT;
+import static org.jooq.Clause.SELECT_FROM;
+import static org.jooq.Clause.SELECT_WHERE;
+import static org.jooq.Clause.TABLE_ALIAS;
+import static org.jooq.Clause.UPDATE;
+import static org.jooq.Clause.UPDATE_UPDATE;
+import static org.jooq.Clause.UPDATE_WHERE;
 
 @Component
 public class TenantIDModifierVisitListener extends DefaultVisitListener {
@@ -171,6 +187,9 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                 addConditions(context, DSL.table(DSL.name(tableName)),
                         DSL.field(DSL.name(schemaName, tableName, multiTenancyProperties.getTenantIdentifier())), tenantID);
             }
+        } else {
+            throw new TenantIDException(multiTenancyProperties.getTenantIdentifier() + " value is missing! " +
+                    "Please check MultiTenancyStorage.setTenantID(Integer) has invoked or not!");
         }
     }
 }

@@ -52,6 +52,15 @@ multi:
     sql-auto-add-filters: true
 ```
 
+### Scheduler
+
+- If there are SQL releated schedulers in application, we can not get tenantID
+  through `request.getHeader("X-TenantID")` in `WebMvcConfig`
+- We need to add `MultiTenancyStorage.setTenantID(tenantID)` before scheduler logic
+  and add `MultiTenancyStorage.setTenantID(null)` after scheduler logic
+- Please check `springboot-postgres-jooq/src/main/java/com/example/springbootpostgresjooq/job/ScheduledJob.java`
+  for detailed information
+
 ## Row Level Security Implementation
 
 - Same database, same schema, same table, filter by `tenant_id` column

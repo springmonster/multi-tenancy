@@ -6,7 +6,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.multi:tenancy:0.0.1-SNAPSHOT'
+    implementation 'com.multi:tenancy:0.0.2-SNAPSHOT'
     jooqGenerator 'org.postgresql:postgresql:42.5.0'
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.springframework.boot:spring-boot-starter-jooq'
