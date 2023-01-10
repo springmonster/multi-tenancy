@@ -46,11 +46,12 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
 
     private void checkSQL(String originalSQL) {
         try {
-            Statement stmt = CCJSqlParserUtil.parse(originalSQL);
+            String transformOriginalSQL = transformOriginalSQL(originalSQL);
+            Statement stmt = CCJSqlParserUtil.parse(transformOriginalSQL);
             if (stmt instanceof Select
                     || stmt instanceof Update
                     || stmt instanceof Delete) {
-                checkSelectUpdateDeleteSQL(stmt, originalSQL);
+                checkSelectUpdateDeleteSQL(stmt, transformOriginalSQL);
             }
         } catch (JSQLParserException e) {
             throw new TenantIDException(SQL_PARSER_ERROR);
@@ -138,7 +139,8 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
         boolean isTenantTableExist = false;
         for (String tableName : multiTenancyProperties.getTables()) {
             String tempTableName = tableName.split("\\.")[1];
-            if (originalTableName.equalsIgnoreCase(transformTableName(tempTableName))) {
+            String transformedTempTableName = transformTableName(tempTableName);
+            if (originalTableName.equalsIgnoreCase(transformedTempTableName)) {
                 isTenantTableExist = true;
                 break;
             }
@@ -150,5 +152,13 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
         return "\"" +
                 tableName +
                 "\"";
+    }
+
+    private String transformOriginalSQL(String originalSQL) {
+        if (originalSQL.contains("`")) {
+            return originalSQL.replace("`", "\"");
+        } else {
+            return originalSQL;
+        }
     }
 }
