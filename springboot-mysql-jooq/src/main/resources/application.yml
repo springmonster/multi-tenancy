@@ -1,0 +1,23 @@
+server:
+  port: 8082
+
+multi:
+  tenancy:
+    enabled: true
+    tenant-identifier: tenant_id
+    tables:
+      - multi_tenancy.t_user
+      - multi_tenancy.t_order
+    sql-check-filters-exist: true
+    sql-auto-add-filters: true
+
+logging:
+  level:
+    com.example.multitenancylibrary: DEBUG
+
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/multi_tenancy
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
