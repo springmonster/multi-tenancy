@@ -2,4 +2,5 @@ rootProject.name = 'MultiTenancy'
 
 include 'multi-tenancy-library'
 include 'springboot-postgres-jooq'
+include 'springboot-mysql-jooq'
 include 'rls'
