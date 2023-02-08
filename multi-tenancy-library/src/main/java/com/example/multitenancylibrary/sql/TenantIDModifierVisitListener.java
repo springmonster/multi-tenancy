@@ -28,6 +28,8 @@ import static org.jooq.Clause.SELECT;
 import static org.jooq.Clause.SELECT_FROM;
 import static org.jooq.Clause.SELECT_WHERE;
 import static org.jooq.Clause.TABLE_ALIAS;
+import static org.jooq.Clause.TABLE_JOIN_OUTER_LEFT;
+import static org.jooq.Clause.TABLE_JOIN_OUTER_RIGHT;
 import static org.jooq.Clause.UPDATE;
 import static org.jooq.Clause.UPDATE_UPDATE;
 import static org.jooq.Clause.UPDATE_WHERE;
@@ -42,18 +44,32 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         this.multiTenancyProperties = multiTenancyProperties;
     }
 
-    private void pushConditionAndWhere(VisitContext context) {
+    private void pushConditionAndWhereAndOn(VisitContext context) {
         getConditionStack(context).push(new ArrayList<>());
         getWhereStack(context).push(false);
+        getOnStack(context).push(new ArrayList<>());
     }
 
-    private void popConditionAndWhere(VisitContext context) {
+    private void popConditionAndWhereAndOn(VisitContext context) {
         getWhereStack(context).pop();
         getConditionStack(context).pop();
+        getOnStack(context).pop();
     }
 
     private Deque<List<Condition>> getConditionStack(VisitContext context) {
         String conditions = "conditions";
+        Deque<List<Condition>> data = (Deque<List<Condition>>) context.data(conditions);
+
+        if (data == null) {
+            data = new ArrayDeque<>();
+            context.data(conditions, data);
+        }
+
+        return data;
+    }
+
+    private Deque<List<Condition>> getOnStack(VisitContext context) {
+        String conditions = "on";
         Deque<List<Condition>> data = (Deque<List<Condition>>) context.data(conditions);
 
         if (data == null) {
@@ -78,6 +94,10 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
 
     private List<Condition> peekConditions(VisitContext context) {
         return getConditionStack(context).peek();
+    }
+
+    private List<Condition> peekOns(VisitContext context) {
+        return getOnStack(context).peek();
     }
 
     private boolean peekWhere(VisitContext context) {
@@ -114,6 +134,23 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
 
                     peekConditions(context).add(field.in(values));
                 }
+
+                if (clauses.contains(TABLE_JOIN_OUTER_LEFT) ||
+                        clauses.contains(TABLE_JOIN_OUTER_RIGHT)) {
+
+                    if (clauses.contains(TABLE_ALIAS)) {
+                        QueryPart[] parts = context.queryParts();
+
+                        for (int i = parts.length - 2; i >= 0; i--) {
+                            if (parts[i] instanceof Table) {
+                                field = ((Table<?>) parts[i]).field(field);
+                                break;
+                            }
+                        }
+                    }
+
+                    peekOns(context).add(field.in(values));
+                }
             }
         }
     }
@@ -134,16 +171,30 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                 context.clause() == UPDATE ||
                 context.clause() == DELETE ||
                 context.clause() == INSERT) {
-            pushConditionAndWhere(context);
+            pushConditionAndWhereAndOn(context);
         }
     }
 
     @Override
     public void clauseEnd(VisitContext context) {
-        if (context.clause() == SELECT_WHERE ||
+        if (context.clause() == TABLE_JOIN_OUTER_LEFT ||
+                context.clause() == TABLE_JOIN_OUTER_RIGHT) {
+            List<Condition> conditions = peekOns(context);
+
+            if (conditions.size() > 0) {
+                context.context()
+                        .formatSeparator()
+                        .keyword("and")
+                        .sql(' ');
+
+                context.context().visit(DSL.condition(Operator.AND, conditions));
+            }
+        } else if (context.clause() == SELECT_WHERE ||
                 context.clause() == UPDATE_WHERE ||
                 context.clause() == DELETE_WHERE) {
             List<Condition> conditions = peekConditions(context);
+            List<Condition> ons = peekOns(context);
+            conditions.removeAll(ons);
 
             if (conditions.size() > 0) {
                 context.context()
@@ -159,7 +210,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                 context.clause() == UPDATE ||
                 context.clause() == DELETE ||
                 context.clause() == INSERT) {
-            popConditionAndWhere(context);
+            popConditionAndWhereAndOn(context);
         }
     }
 

@@ -6,7 +6,14 @@ import com.khch.jooq.tables.pojos.TOrder;
 import com.khch.jooq.tables.pojos.TUser;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
@@ -31,8 +38,9 @@ public class UserController {
         return dslContext.select(T_USER.fields())
                 .select(T_ORDER.fields())
                 .from(T_USER)
-                .join(T_ORDER)
+                .leftOuterJoin(T_ORDER)
                 .on(T_USER.USER_ID.eq(T_ORDER.USER_ID))
+                .where(T_USER.USER_NAME.eq("uname4"))
                 .fetchGroups(
                         r -> r.into(T_USER).into(TUser.class),
                         r -> r.into(T_ORDER).into(TOrder.class)
