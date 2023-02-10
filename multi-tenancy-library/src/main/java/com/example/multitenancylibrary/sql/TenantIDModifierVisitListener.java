@@ -181,36 +181,28 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         if (context.clause() == TABLE_JOIN_OUTER_LEFT ||
                 context.clause() == TABLE_JOIN_OUTER_RIGHT) {
             QueryPart[] queryParts = context.queryParts();
+            String rTableName = null;
             for (QueryPart queryPart : queryParts) {
-                try {
-                    Class<?> joinTable = Class.forName("org.jooq.impl.JoinTable");
-                    if (joinTable.isAssignableFrom(queryPart.getClass())) {
-                        Object cast = joinTable.cast(queryPart);
-                        java.lang.reflect.Field lhs = ReflectionUtils.findField(joinTable, "lhs");
-                        java.lang.reflect.Field rhs = ReflectionUtils.findField(joinTable, "rhs");
-
-                        ReflectionUtils.makeAccessible(lhs);
-                        ReflectionUtils.makeAccessible(rhs);
-
-                        Table lTable = (Table) ReflectionUtils.getField(lhs, cast);
-                        Table rTable = (Table) ReflectionUtils.getField(rhs, cast);
-
-                        System.out.println(lTable.getName());
-                        System.out.println(rTable.getName());
-                    }
-
-                } catch (ClassNotFoundException e) {
-                }
+                rTableName = analyzeOutJoin(queryPart);
             }
             List<Condition> conditions = peekOns(context);
 
             if (conditions.size() > 0) {
+                List<Condition> finalOnConditions = new ArrayList<>();
+                for (Condition condition : conditions) {
+                    if (null != rTableName && condition.toString().contains(rTableName)) {
+                        finalOnConditions.add(condition);
+                    }
+                }
+                getOnStack(context).poll();
+                getOnStack(context).add(finalOnConditions);
+
                 context.context()
                         .formatSeparator()
                         .keyword("and")
                         .sql(' ');
 
-                context.context().visit(DSL.condition(Operator.AND, conditions));
+                context.context().visit(DSL.condition(Operator.AND, finalOnConditions));
             }
         } else if (context.clause() == SELECT_WHERE ||
                 context.clause() == UPDATE_WHERE ||
@@ -235,6 +227,22 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                 context.clause() == INSERT) {
             popConditionAndWhereAndOn(context);
         }
+    }
+
+    private String analyzeOutJoin(QueryPart queryPart) {
+        try {
+            Class<?> joinTable = Class.forName("org.jooq.impl.JoinTable");
+            if (joinTable.isAssignableFrom(queryPart.getClass())) {
+                Object cast = joinTable.cast(queryPart);
+                java.lang.reflect.Field rhs = ReflectionUtils.findField(joinTable, "rhs");
+                ReflectionUtils.makeAccessible(rhs);
+                Table rTable = (Table) ReflectionUtils.getField(rhs, cast);
+                return rTable.getName();
+            }
+
+        } catch (ClassNotFoundException e) {
+        }
+        return null;
     }
 
     @Override
