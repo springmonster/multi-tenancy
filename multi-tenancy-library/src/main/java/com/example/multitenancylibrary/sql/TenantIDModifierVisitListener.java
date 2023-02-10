@@ -13,6 +13,7 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultVisitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -179,6 +180,28 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     public void clauseEnd(VisitContext context) {
         if (context.clause() == TABLE_JOIN_OUTER_LEFT ||
                 context.clause() == TABLE_JOIN_OUTER_RIGHT) {
+            QueryPart[] queryParts = context.queryParts();
+            for (QueryPart queryPart : queryParts) {
+                try {
+                    Class<?> joinTable = Class.forName("org.jooq.impl.JoinTable");
+                    if (joinTable.isAssignableFrom(queryPart.getClass())) {
+                        Object cast = joinTable.cast(queryPart);
+                        java.lang.reflect.Field lhs = ReflectionUtils.findField(joinTable, "lhs");
+                        java.lang.reflect.Field rhs = ReflectionUtils.findField(joinTable, "rhs");
+
+                        ReflectionUtils.makeAccessible(lhs);
+                        ReflectionUtils.makeAccessible(rhs);
+
+                        Table lTable = (Table) ReflectionUtils.getField(lhs, cast);
+                        Table rTable = (Table) ReflectionUtils.getField(rhs, cast);
+
+                        System.out.println(lTable.getName());
+                        System.out.println(rTable.getName());
+                    }
+
+                } catch (ClassNotFoundException e) {
+                }
+            }
             List<Condition> conditions = peekOns(context);
 
             if (conditions.size() > 0) {
