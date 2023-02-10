@@ -19,7 +19,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static org.jooq.Clause.DELETE;
@@ -188,7 +187,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
             }
             List<Condition> conditions = peekOns(context);
 
-            if (conditions.size() > 0) {
+            if (!conditions.isEmpty()) {
                 List<Condition> finalOnConditions = new ArrayList<>();
                 for (Condition condition : conditions) {
                     if (null != rTableName && condition.toString().contains(rTableName)) {
@@ -203,7 +202,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                         .keyword("and")
                         .sql(' ');
 
-                List<Condition> collect = finalOnConditions.stream().distinct().collect(Collectors.toList());
+                List<Condition> collect = finalOnConditions.stream().distinct().toList();
                 finalOnConditions.clear();
                 finalOnConditions.addAll(collect);
 
@@ -216,13 +215,13 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
             List<Condition> ons = peekOns(context);
             conditions.removeAll(ons);
 
-            if (conditions.size() > 0) {
+            if (!conditions.isEmpty()) {
                 context.context()
                         .formatSeparator()
                         .keyword(peekWhere(context) ? "and" : "where")
                         .sql(' ');
 
-                List<Condition> collect = conditions.stream().distinct().collect(Collectors.toList());
+                List<Condition> collect = conditions.stream().distinct().toList();
                 conditions.clear();
                 conditions.addAll(collect);
 
