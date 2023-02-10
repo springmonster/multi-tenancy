@@ -38,9 +38,8 @@ public class UserController {
         return dslContext.select(T_USER.fields())
                 .select(T_ORDER.fields())
                 .from(T_USER)
-                .leftOuterJoin(T_ORDER)
+                .rightJoin(T_ORDER)
                 .on(T_USER.USER_ID.eq(T_ORDER.USER_ID))
-                .where(T_USER.USER_NAME.eq("uname4"))
                 .fetchGroups(
                         r -> r.into(T_USER).into(TUser.class),
                         r -> r.into(T_ORDER).into(TOrder.class)

@@ -19,6 +19,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static org.jooq.Clause.DELETE;
@@ -183,7 +184,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
             QueryPart[] queryParts = context.queryParts();
             String rTableName = null;
             for (QueryPart queryPart : queryParts) {
-                rTableName = analyzeOutJoin(queryPart);
+                rTableName = getOuterJoinRightTableName(queryPart);
             }
             List<Condition> conditions = peekOns(context);
 
@@ -202,6 +203,10 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                         .keyword("and")
                         .sql(' ');
 
+                List<Condition> collect = finalOnConditions.stream().distinct().collect(Collectors.toList());
+                finalOnConditions.clear();
+                finalOnConditions.addAll(collect);
+
                 context.context().visit(DSL.condition(Operator.AND, finalOnConditions));
             }
         } else if (context.clause() == SELECT_WHERE ||
@@ -217,6 +222,10 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                         .keyword(peekWhere(context) ? "and" : "where")
                         .sql(' ');
 
+                List<Condition> collect = conditions.stream().distinct().collect(Collectors.toList());
+                conditions.clear();
+                conditions.addAll(collect);
+
                 context.context().visit(DSL.condition(Operator.AND, conditions));
             }
         }
@@ -229,7 +238,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         }
     }
 
-    private String analyzeOutJoin(QueryPart queryPart) {
+    private String getOuterJoinRightTableName(QueryPart queryPart) {
         try {
             Class<?> joinTable = Class.forName("org.jooq.impl.JoinTable");
             if (joinTable.isAssignableFrom(queryPart.getClass())) {
