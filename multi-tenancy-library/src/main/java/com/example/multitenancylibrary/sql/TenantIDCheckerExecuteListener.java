@@ -75,7 +75,9 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
             boolean isConditionExist = isConditionExistInSQL(originalSQL, createWhereInCondition(tableName))
                     || isConditionExistInSQL(originalSQL, createWhereEqCondition(tableName))
                     || isConditionExistInSQL(originalSQL, createAndInCondition(tableName))
-                    || isConditionExistInSQL(originalSQL, createAndEqCondition(tableName));
+                    || isConditionExistInSQL(originalSQL, createAndEqCondition(tableName))
+                    || isConditionExistInSQL(originalSQL, createEqCondition(tableName))
+                    || isConditionExistInSQL(originalSQL, createInCondition(tableName));
 
             if (!isConditionExist) {
                 throw new TenantIDException("Tenant conditions does not exist in table " + tableName);
@@ -121,6 +123,24 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
                 this.multiTenancyProperties.getTenantIdentifier() +
                 "\"" +
                 " = ";
+    }
+
+    private String createEqCondition(String tableName) {
+        return tableName +
+                "." +
+                "\"" +
+                this.multiTenancyProperties.getTenantIdentifier() +
+                "\"" +
+                " = ";
+    }
+
+    private String createInCondition(String tableName) {
+        return tableName +
+                "." +
+                "\"" +
+                this.multiTenancyProperties.getTenantIdentifier() +
+                "\"" +
+                " in ";
     }
 
     private String getOriginalOrAliasTableName(Table table) {
