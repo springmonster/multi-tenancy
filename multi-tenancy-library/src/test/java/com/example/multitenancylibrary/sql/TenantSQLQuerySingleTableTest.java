@@ -11,7 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.jooq.impl.DSL.*;
+import java.util.List;
+
+import static org.jooq.impl.DSL.name;
+import static org.jooq.impl.DSL.tableByName;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -34,17 +37,17 @@ class TenantSQLQuerySingleTableTest {
         Assertions.assertEquals(2, fetch.size());
     }
 
-    // TODO: 2023/2/13 why is can't execute?
     @Test
     void testUserTableQueryWithAlias() {
         MultiTenancyStorage.setTenantID(4);
 
-
-        Table<Record> table = table(name("PUBLIC", "t_user")).as("t_alias");
+        List<Table<?>> tables = dslContext.meta().getTables(name("PUBLIC", "t_user"));
+        Table<?> table = tables.get(0);
+        Table<?> tUserAlias = table.as("t_user_alias");
 
         Result<Record> fetch = dslContext
                 .select()
-                .from(table)
+                .from(tUserAlias)
                 .fetch();
 
         MultiTenancyStorage.setTenantID(null);
