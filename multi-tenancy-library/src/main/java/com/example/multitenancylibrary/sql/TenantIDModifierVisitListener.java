@@ -148,9 +148,10 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
 
     @Override
     public void clauseEnd(VisitContext context) {
-        if (context.clause() == TABLE_JOIN_OUTER_LEFT ||
-                context.clause() == TABLE_JOIN_OUTER_RIGHT) {
-            autoExtendOuterJoin(context);
+        if (context.clause() == TABLE_JOIN_OUTER_LEFT) {
+            autoExtendOuterJoin(context, true);
+        } else if (context.clause() == TABLE_JOIN_OUTER_RIGHT) {
+            autoExtendOuterJoin(context, false);
         } else if (context.clause() == SELECT_WHERE ||
                 context.clause() == UPDATE_WHERE ||
                 context.clause() == DELETE_WHERE) {
@@ -165,7 +166,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         }
     }
 
-    private void autoExtendOuterJoin(VisitContext context) {
+    private void autoExtendOuterJoin(VisitContext context, boolean isLeftOuterJoin) {
         List<Condition> conditions = peekConditions(context);
         if (conditions.isEmpty()) {
             return;
@@ -173,14 +174,14 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         removeDuplicatedConditions(conditions);
 
         QueryPart[] queryParts = context.queryParts();
-        String rTableName = null;
+        String secondaryTable = null;
         for (QueryPart queryPart : queryParts) {
-            rTableName = getOuterJoinRightTableName(queryPart);
+            secondaryTable = getOuterJoinSecondaryTableName(queryPart, isLeftOuterJoin);
         }
 
         List<Condition> finalRTableConditions = new ArrayList<>();
         for (Condition condition : conditions) {
-            if(rTableName!=null && condition.toString().contains(rTableName)) {
+            if (secondaryTable != null && condition.toString().contains(secondaryTable)) {
                 finalRTableConditions.add(condition);
             }
         }
@@ -222,15 +223,15 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         conditions.addAll(collect);
     }
 
-    private String getOuterJoinRightTableName(QueryPart queryPart) {
+    private String getOuterJoinSecondaryTableName(QueryPart queryPart, boolean isLeftOuterJoin) {
         try {
             Class<?> joinTable = Class.forName("org.jooq.impl.JoinTable");
             if (joinTable.isAssignableFrom(queryPart.getClass())) {
                 Object joinTableObj = joinTable.cast(queryPart);
-                java.lang.reflect.Field rhs = ReflectionUtils.findField(joinTable, "rhs");
-                ReflectionUtils.makeAccessible(rhs);
-                Table rTable = (Table) ReflectionUtils.getField(rhs, joinTableObj);
-                return rTable.getName();
+
+                java.lang.reflect.Field table = ReflectionUtils.findField(joinTable, isLeftOuterJoin ? "rhs" : "lhs");
+                ReflectionUtils.makeAccessible(table);
+                return ((Table) ReflectionUtils.getField(table, joinTableObj)).getName();
             }
 
         } catch (ClassNotFoundException e) {

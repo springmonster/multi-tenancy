@@ -11,6 +11,10 @@ INSERT INTO PUBLIC.t_user ("user_id", "tenant_id", "user_name")
 VALUES ('uid5', 4, 'uname5');
 INSERT INTO PUBLIC.t_user ("user_id", "tenant_id", "user_name")
 VALUES ('uid6', 5, 'uname6');
+INSERT INTO PUBLIC.t_user ("user_id", "tenant_id", "user_name")
+VALUES ('uid9', 9, 'uname9');
+INSERT INTO PUBLIC.t_user ("user_id", "tenant_id", "user_name")
+VALUES ('uid100', 100, 'uname100');
 
 -- t_order
 INSERT INTO PUBLIC.t_order ("user_id", "order_id", "tenant_id")
@@ -19,6 +23,12 @@ INSERT INTO PUBLIC.t_order ("user_id", "order_id", "tenant_id")
 VALUES ('uid2', 'ord1', 2);
 INSERT INTO PUBLIC.t_order ("user_id", "order_id", "tenant_id")
 VALUES ('uid3', 'ord1', 2);
+INSERT INTO PUBLIC.t_order ("user_id", "order_id", "tenant_id")
+VALUES ('uid9', 'ord1', 9);
+INSERT INTO PUBLIC.t_order ("user_id", "order_id", "tenant_id")
+VALUES ('uid9', 'ord2', 9);
+INSERT INTO PUBLIC.t_order ("user_id", "order_id", "tenant_id")
+VALUES ('uid10', 'ord1', 9);
 
 -- t_order_detail order_id, quantity,
 INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
@@ -29,3 +39,11 @@ INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
 VALUES ('ord3', 3, 3);
 INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
 VALUES ('ord4', 4, 4);
+INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
+VALUES ('ord9', 4, 9);
+INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
+VALUES ('ord1', 4, 9);
+INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
+VALUES ('ord1', 4, 9);
+INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
+VALUES ('ord1', 4, 9);
