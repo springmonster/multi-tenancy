@@ -64,6 +64,40 @@ class TenantSQLExecutingTest {
     }
 
     @Test
+    void testUserAndOrderInnerJoin() {
+        MultiTenancyStorage.setTenantID(2);
+
+        Result<Record> fetch = dslContext
+                .select(tableByName("PUBLIC", "t_user").fields())
+                .from(tableByName("PUBLIC", "t_user"))
+                .innerJoin(tableByName("PUBLIC", "t_order"))
+                .on(field(name("PUBLIC", "t_user", "user_id"))
+                        .eq(field(name("PUBLIC", "t_order", "user_id"), String.class)))
+                .fetch();
+
+        MultiTenancyStorage.setTenantID(null);
+
+        Assertions.assertEquals(2, fetch.size());
+    }
+
+    @Test
+    void testUserAndOrderNestedQuery() {
+        MultiTenancyStorage.setTenantID(2);
+
+        Result<Record> fetch = dslContext
+                .select(tableByName("PUBLIC", "t_user").fields())
+                .from(tableByName("PUBLIC", "t_user"))
+                .where(field(name("PUBLIC", "t_user", "user_id"))
+                        .in(select(field(name("PUBLIC", "t_order", "user_id"), String.class))
+                                .from(tableByName("PUBLIC", "t_order"))))
+                .fetch();
+
+        MultiTenancyStorage.setTenantID(null);
+
+        Assertions.assertEquals(2, fetch.size());
+    }
+
+    @Test
     void testLeftOuterJoinTwoTables() {
         MultiTenancyStorage.setTenantID(4);
 
