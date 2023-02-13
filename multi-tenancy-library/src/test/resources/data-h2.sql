@@ -30,7 +30,7 @@ VALUES ('uid9', 'ord2', 9);
 INSERT INTO PUBLIC.t_order ("user_id", "order_id", "tenant_id")
 VALUES ('uid10', 'ord1', 9);
 
--- t_order_detail order_id, quantity,
+-- t_order_detail
 INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
 VALUES ('ord1', 1, 1);
 INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
