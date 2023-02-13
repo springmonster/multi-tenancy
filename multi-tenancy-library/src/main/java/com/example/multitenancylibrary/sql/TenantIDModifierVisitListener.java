@@ -109,12 +109,6 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                 field = getTableAlias(context, field, clauses);
                 peekConditions(context).add(field.in(values));
             }
-
-            if (clauses.contains(TABLE_JOIN_OUTER_LEFT) ||
-                    clauses.contains(TABLE_JOIN_OUTER_RIGHT)) {
-                field = getTableAlias(context, field, clauses);
-                peekOns(context).add(field.in(values));
-            }
         }
     }
 
@@ -172,7 +166,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     }
 
     private void autoExtendOuterJoin(VisitContext context) {
-        List<Condition> conditions = peekOns(context);
+        List<Condition> conditions = peekConditions(context);
         if (conditions.isEmpty()) {
             return;
         }
@@ -184,19 +178,22 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
             rTableName = getOuterJoinRightTableName(queryPart);
         }
 
-        String finalRTableName = rTableName == null ? "" : rTableName;
-        conditions.removeIf(condition -> !condition.toString().contains(finalRTableName));
+        List<Condition> finalRTableConditions = new ArrayList<>();
+        for (Condition condition : conditions) {
+            if(rTableName!=null && condition.toString().contains(rTableName)) {
+                finalRTableConditions.add(condition);
+            }
+        }
 
-        if (!conditions.isEmpty()) {
-            getOnStack(context).poll();
-            getOnStack(context).add(conditions);
+        if (!finalRTableConditions.isEmpty()) {
+            peekOns(context).addAll(finalRTableConditions);
 
             context.context()
                     .formatSeparator()
                     .keyword("and")
                     .sql(' ');
 
-            context.context().visit(DSL.condition(Operator.AND, conditions));
+            context.context().visit(DSL.condition(Operator.AND, finalRTableConditions));
         }
     }
 
