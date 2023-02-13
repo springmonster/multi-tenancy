@@ -2,13 +2,7 @@ package com.example.multitenancylibrary.sql;
 
 import com.example.multitenancylibrary.config.MultiTenancyProperties;
 import com.example.multitenancylibrary.network.MultiTenancyStorage;
-import org.jooq.Clause;
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.Operator;
-import org.jooq.QueryPart;
-import org.jooq.Table;
-import org.jooq.VisitContext;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultVisitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,19 +15,7 @@ import java.util.Deque;
 import java.util.List;
 
 import static java.util.Arrays.asList;
-import static org.jooq.Clause.DELETE;
-import static org.jooq.Clause.DELETE_DELETE;
-import static org.jooq.Clause.DELETE_WHERE;
-import static org.jooq.Clause.INSERT;
-import static org.jooq.Clause.SELECT;
-import static org.jooq.Clause.SELECT_FROM;
-import static org.jooq.Clause.SELECT_WHERE;
-import static org.jooq.Clause.TABLE_ALIAS;
-import static org.jooq.Clause.TABLE_JOIN_OUTER_LEFT;
-import static org.jooq.Clause.TABLE_JOIN_OUTER_RIGHT;
-import static org.jooq.Clause.UPDATE;
-import static org.jooq.Clause.UPDATE_UPDATE;
-import static org.jooq.Clause.UPDATE_WHERE;
+import static org.jooq.Clause.*;
 
 @Component
 public class TenantIDModifierVisitListener extends DefaultVisitListener {
@@ -115,45 +97,39 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
 
         if (queryPart instanceof Table) {
             Table queryTable = (Table) queryPart;
-            if (queryTable.getName().equals(table.getName())) {
-                List<Clause> clauses = getClauses(context);
+            if (!queryTable.getName().equals(table.getName())) {
+                return;
+            }
 
-                if (clauses.contains(SELECT_FROM) ||
-                        clauses.contains(UPDATE_UPDATE) ||
-                        clauses.contains(DELETE_DELETE)) {
+            List<Clause> clauses = getClauses(context);
 
-                    if (clauses.contains(TABLE_ALIAS)) {
-                        QueryPart[] parts = context.queryParts();
+            if (clauses.contains(SELECT_FROM) ||
+                    clauses.contains(UPDATE_UPDATE) ||
+                    clauses.contains(DELETE_DELETE)) {
+                field = getTableAlias(context, field, clauses);
+                peekConditions(context).add(field.in(values));
+            }
 
-                        for (int i = parts.length - 2; i >= 0; i--) {
-                            if (parts[i] instanceof Table) {
-                                field = ((Table<?>) parts[i]).field(field);
-                                break;
-                            }
-                        }
-                    }
+            if (clauses.contains(TABLE_JOIN_OUTER_LEFT) ||
+                    clauses.contains(TABLE_JOIN_OUTER_RIGHT)) {
+                field = getTableAlias(context, field, clauses);
+                peekOns(context).add(field.in(values));
+            }
+        }
+    }
 
-                    peekConditions(context).add(field.in(values));
-                }
+    private static <E> Field<E> getTableAlias(VisitContext context, Field<E> field, List<Clause> clauses) {
+        if (clauses.contains(TABLE_ALIAS)) {
+            QueryPart[] parts = context.queryParts();
 
-                if (clauses.contains(TABLE_JOIN_OUTER_LEFT) ||
-                        clauses.contains(TABLE_JOIN_OUTER_RIGHT)) {
-
-                    if (clauses.contains(TABLE_ALIAS)) {
-                        QueryPart[] parts = context.queryParts();
-
-                        for (int i = parts.length - 2; i >= 0; i--) {
-                            if (parts[i] instanceof Table) {
-                                field = ((Table<?>) parts[i]).field(field);
-                                break;
-                            }
-                        }
-                    }
-
-                    peekOns(context).add(field.in(values));
+            for (int i = parts.length - 2; i >= 0; i--) {
+                if (parts[i] instanceof Table) {
+                    field = ((Table<?>) parts[i]).field(field);
+                    break;
                 }
             }
         }
+        return field;
     }
 
     List<Clause> getClauses(VisitContext context) {
@@ -180,53 +156,11 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     public void clauseEnd(VisitContext context) {
         if (context.clause() == TABLE_JOIN_OUTER_LEFT ||
                 context.clause() == TABLE_JOIN_OUTER_RIGHT) {
-            QueryPart[] queryParts = context.queryParts();
-            String rTableName = null;
-            for (QueryPart queryPart : queryParts) {
-                rTableName = getOuterJoinRightTableName(queryPart);
-            }
-            List<Condition> conditions = peekOns(context);
-
-            if (!conditions.isEmpty()) {
-                List<Condition> finalOnConditions = new ArrayList<>();
-                for (Condition condition : conditions) {
-                    if (null != rTableName && condition.toString().contains(rTableName)) {
-                        finalOnConditions.add(condition);
-                    }
-                }
-                getOnStack(context).poll();
-                getOnStack(context).add(finalOnConditions);
-
-                context.context()
-                        .formatSeparator()
-                        .keyword("and")
-                        .sql(' ');
-
-                List<Condition> collect = finalOnConditions.stream().distinct().toList();
-                finalOnConditions.clear();
-                finalOnConditions.addAll(collect);
-
-                context.context().visit(DSL.condition(Operator.AND, finalOnConditions));
-            }
+            autoExtendOuterJoin(context);
         } else if (context.clause() == SELECT_WHERE ||
                 context.clause() == UPDATE_WHERE ||
                 context.clause() == DELETE_WHERE) {
-            List<Condition> conditions = peekConditions(context);
-            List<Condition> ons = peekOns(context);
-            conditions.removeAll(ons);
-
-            if (!conditions.isEmpty()) {
-                context.context()
-                        .formatSeparator()
-                        .keyword(peekWhere(context) ? "and" : "where")
-                        .sql(' ');
-
-                List<Condition> collect = conditions.stream().distinct().toList();
-                conditions.clear();
-                conditions.addAll(collect);
-
-                context.context().visit(DSL.condition(Operator.AND, conditions));
-            }
+            autoExtendSelectUpdateDelete(context);
         }
 
         if (context.clause() == SELECT ||
@@ -237,14 +171,68 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         }
     }
 
+    private void autoExtendOuterJoin(VisitContext context) {
+        List<Condition> conditions = peekOns(context);
+        if (conditions.isEmpty()) {
+            return;
+        }
+        removeDuplicatedConditions(conditions);
+
+        QueryPart[] queryParts = context.queryParts();
+        String rTableName = null;
+        for (QueryPart queryPart : queryParts) {
+            rTableName = getOuterJoinRightTableName(queryPart);
+        }
+
+        String finalRTableName = rTableName == null ? "" : rTableName;
+        conditions.removeIf(condition -> !condition.toString().contains(finalRTableName));
+
+        if (!conditions.isEmpty()) {
+            getOnStack(context).poll();
+            getOnStack(context).add(conditions);
+
+            context.context()
+                    .formatSeparator()
+                    .keyword("and")
+                    .sql(' ');
+
+            context.context().visit(DSL.condition(Operator.AND, conditions));
+        }
+    }
+
+    private void autoExtendSelectUpdateDelete(VisitContext context) {
+        List<Condition> conditions = peekConditions(context);
+        if (conditions.isEmpty()) {
+            return;
+        }
+        removeDuplicatedConditions(conditions);
+
+        List<Condition> ons = peekOns(context);
+        conditions.removeAll(ons);
+
+        if (!conditions.isEmpty()) {
+            context.context()
+                    .formatSeparator()
+                    .keyword(peekWhere(context) ? "and" : "where")
+                    .sql(' ');
+            context.context().visit(DSL.condition(Operator.AND, conditions));
+        }
+    }
+
+    private static void removeDuplicatedConditions(List<Condition> conditions) {
+        List<Condition> collect = conditions.stream().distinct().toList();
+        conditions.clear();
+        conditions.addAll(collect);
+    }
+
     private String getOuterJoinRightTableName(QueryPart queryPart) {
         try {
             Class<?> joinTable = Class.forName("org.jooq.impl.JoinTable");
             if (joinTable.isAssignableFrom(queryPart.getClass())) {
-                Object cast = joinTable.cast(queryPart);
+                Object joinTableObj = joinTable.cast(queryPart);
                 java.lang.reflect.Field rhs = ReflectionUtils.findField(joinTable, "rhs");
                 ReflectionUtils.makeAccessible(rhs);
-                Table rTable = (Table) ReflectionUtils.getField(rhs, cast);
+                Table rTable = (Table) ReflectionUtils.getField(rhs, joinTableObj);
                 return rTable.getName();
             }
 
