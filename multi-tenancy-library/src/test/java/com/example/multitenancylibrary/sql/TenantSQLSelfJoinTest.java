@@ -73,4 +73,26 @@ public class TenantSQLSelfJoinTest {
 
         Assertions.assertEquals(6, fetch.size());
     }
+
+    @Test
+    void testSelfRightJoin() {
+        MultiTenancyStorage.setTenantID(1);
+
+        Table c = departmentTable.as("c");
+        Result<Record> fetch = dslContext
+                .select(departmentTable.field("id"),
+                        departmentTable.field("department_id"),
+                        departmentTable.field("department_name"),
+                        departmentTable.field("parent_department_id"),
+                        departmentTable.field("tenant_id"),
+                        c.field("department_name").as("parent_department_name"))
+                .from(c)
+                .rightOuterJoin(departmentTable)
+                .on(departmentTable.field("parent_department_id").eq(c.field("department_id")))
+                .fetch();
+
+        MultiTenancyStorage.setTenantID(null);
+
+        Assertions.assertEquals(7, fetch.size());
+    }
 }
