@@ -1,10 +1,8 @@
 package com.example.multitenancylibrary.sql;
 
 import com.example.multitenancylibrary.network.MultiTenancyStorage;
-import org.jooq.DSLContext;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.Result;
-import org.jooq.Table;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,5 +57,19 @@ class TenantSQLQuerySingleTableTest {
         MultiTenancyStorage.setTenantID(null);
 
         Assertions.assertEquals(2, fetch.size());
+    }
+
+    @Test
+    void testUserTableQueryDistinct() {
+        MultiTenancyStorage.setTenantID(1);
+
+        Result<? extends Record1<?>> userId = dslContext
+                .selectDistinct(userTable.field("user_id"))
+                .from(userTable)
+                .fetch();
+
+        MultiTenancyStorage.setTenantID(null);
+
+        Assertions.assertEquals(2, userId.size());
     }
 }

@@ -1,5 +1,9 @@
 -- t_user
 INSERT INTO PUBLIC.t_user ("user_id", "tenant_id", "user_name")
+VALUES ('uid0', 1, 'uname0');
+INSERT INTO PUBLIC.t_user ("user_id", "tenant_id", "user_name")
+VALUES ('uid1', 1, 'uname1');
+INSERT INTO PUBLIC.t_user ("user_id", "tenant_id", "user_name")
 VALUES ('uid1', 1, 'uname1');
 INSERT INTO PUBLIC.t_user ("user_id", "tenant_id", "user_name")
 VALUES ('uid2', 2, 'uname2');
