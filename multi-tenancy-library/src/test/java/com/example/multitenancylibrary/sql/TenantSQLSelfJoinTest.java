@@ -5,6 +5,7 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.Table;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,27 @@ public class TenantSQLSelfJoinTest {
 
         MultiTenancyStorage.setTenantID(null);
 
-        System.out.println(fetch);
+        Assertions.assertEquals(7, fetch.size());
+    }
+
+    @Test
+    void testSelfInnerJoin() {
+        MultiTenancyStorage.setTenantID(1);
+
+        Table c = departmentTable.as("c");
+        Result<Record> fetch = dslContext
+                .select(c.field("id"),
+                        c.field("department_id"),
+                        c.field("department_name"),
+                        c.field("parent_department_id"),
+                        c.field("tenant_id"))
+                .from(c)
+                .innerJoin(departmentTable)
+                .on(c.field("parent_department_id").eq(departmentTable.field("department_id")))
+                .fetch();
+
+        MultiTenancyStorage.setTenantID(null);
+
+        Assertions.assertEquals(6, fetch.size());
     }
 }
