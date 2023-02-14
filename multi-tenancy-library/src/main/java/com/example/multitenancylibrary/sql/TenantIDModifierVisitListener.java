@@ -130,10 +130,11 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         List<Clause> result = asList(context.clauses());
         int index = result.lastIndexOf(SELECT);
 
-        if (index > 0)
+        if (index > 0) {
             return result.subList(index, result.size() - 1);
-        else
+        } else {
             return result;
+        }
     }
 
     @Override
@@ -231,10 +232,9 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
 
                 java.lang.reflect.Field table = ReflectionUtils.findField(joinTable, isLeftOuterJoin ? "rhs" : "lhs");
                 ReflectionUtils.makeAccessible(table);
-                return ((Table) ReflectionUtils.getField(table, joinTableObj)).getName();
+                return ((Table<?>) ReflectionUtils.getField(table, joinTableObj)).getName();
             }
-
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException ignored) {
         }
         return null;
     }
