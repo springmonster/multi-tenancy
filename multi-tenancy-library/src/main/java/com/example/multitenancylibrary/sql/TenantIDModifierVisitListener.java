@@ -34,8 +34,8 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     }
 
     private void popConditionAndWhereAndOn(VisitContext context) {
-        getWhereStack(context).pop();
         getConditionStack(context).pop();
+        getWhereStack(context).pop();
         getOnStack(context).pop();
     }
 
@@ -83,7 +83,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         return getOnStack(context).peek();
     }
 
-    private boolean peekWhere(VisitContext context) {
+    private boolean peekWheres(VisitContext context) {
         return getWhereStack(context).peek();
     }
 
@@ -211,7 +211,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         if (!conditions.isEmpty()) {
             context.context()
                     .formatSeparator()
-                    .keyword(peekWhere(context) ? "and" : "where")
+                    .keyword(peekWheres(context) ? "and" : "where")
                     .sql(' ');
             context.context().visit(DSL.condition(Operator.AND, conditions));
         }
