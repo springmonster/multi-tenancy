@@ -51,3 +51,19 @@ INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
 VALUES ('ord1', 4, 9);
 INSERT INTO PUBLIC.t_order_detail ("order_id", "quantity", "tenant_id")
 VALUES ('ord1', 4, 9);
+
+-- t_department
+INSERT INTO PUBLIC.t_department ("department_id", "department_name", "tenant_id")
+VALUES (1, 'aaa', 1);
+INSERT INTO PUBLIC.t_department ("department_id", "department_name", "parent_department_id", "tenant_id")
+VALUES (2, 'bbb', 1, 1);
+INSERT INTO PUBLIC.t_department ("department_id", "department_name", "parent_department_id", "tenant_id")
+VALUES (3, 'ccc', 1, 1);
+INSERT INTO PUBLIC.t_department ("department_id", "department_name", "parent_department_id", "tenant_id")
+VALUES (4, 'ddd', 1, 1);
+INSERT INTO PUBLIC.t_department ("department_id", "department_name", "parent_department_id", "tenant_id")
+VALUES (5, 'bbb', 2, 1);
+INSERT INTO PUBLIC.t_department ("department_id", "department_name", "parent_department_id", "tenant_id")
+VALUES (6, 'ccc', 2, 1);
+INSERT INTO PUBLIC.t_department ("department_id", "department_name", "parent_department_id", "tenant_id")
+VALUES (7, 'ddd', 2, 1);
