@@ -5,16 +5,13 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.Table;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
-import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.select;
 
 @SpringBootTest
@@ -87,39 +84,44 @@ class TenantSQLQueryTwoTableTest {
         Assertions.assertEquals(2, fetch.size());
     }
 
-    @Test
-    void testLeftOuterJoinTwoTables() {
-        MultiTenancyStorage.setTenantID(4);
 
-        Result<Record> fetch = dslContext
-                .select(userTable.fields())
-                .select(orderTable.fields())
-                .from(userTable)
-                .leftOuterJoin(orderTable)
-                .on(userTable.field("user_id")
-                        .eq(orderTable.field("user_id")))
-                .fetch();
+    @Nested
+    @DisplayName("Left Outer Join || Right Outer Join")
+    class LeftOrRightOuterJoinTest {
+        @Test
+        void testLeftOuterJoinTwoTables() {
+            MultiTenancyStorage.setTenantID(4);
 
-        MultiTenancyStorage.setTenantID(null);
+            Result<Record> fetch = dslContext
+                    .select(userTable.fields())
+                    .select(orderTable.fields())
+                    .from(userTable)
+                    .leftOuterJoin(orderTable)
+                    .on(userTable.field("user_id")
+                            .eq(orderTable.field("user_id")))
+                    .fetch();
 
-        Assertions.assertEquals(2, fetch.size());
-    }
+            MultiTenancyStorage.setTenantID(null);
 
-    @Test
-    void testRightOuterJoinTwoTables() {
-        MultiTenancyStorage.setTenantID(9);
+            Assertions.assertEquals(2, fetch.size());
+        }
 
-        Result<Record> fetch = dslContext
-                .select(userTable.fields())
-                .select(orderTable.fields())
-                .from(userTable)
-                .rightOuterJoin(orderTable)
-                .on(orderTable.field("user_id")
-                        .eq(userTable.field("user_id")))
-                .fetch();
+        @Test
+        void testRightOuterJoinTwoTables() {
+            MultiTenancyStorage.setTenantID(9);
 
-        MultiTenancyStorage.setTenantID(null);
+            Result<Record> fetch = dslContext
+                    .select(userTable.fields())
+                    .select(orderTable.fields())
+                    .from(userTable)
+                    .rightOuterJoin(orderTable)
+                    .on(orderTable.field("user_id")
+                            .eq(userTable.field("user_id")))
+                    .fetch();
 
-        Assertions.assertEquals(3, fetch.size());
+            MultiTenancyStorage.setTenantID(null);
+
+            Assertions.assertEquals(3, fetch.size());
+        }
     }
 }

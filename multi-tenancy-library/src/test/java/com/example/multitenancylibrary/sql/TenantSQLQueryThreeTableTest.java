@@ -5,9 +5,7 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.Table;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -41,47 +39,51 @@ class TenantSQLQueryThreeTableTest {
         orderDetailTable = tables2.get(0);
     }
 
-    @Test
-    void testLeftOuterJoinThreeTables() {
-        MultiTenancyStorage.setTenantID(4);
+    @Nested
+    @DisplayName("Left Outer Join || Right Outer Join")
+    class LeftOrRightOuterJoinTest {
+        @Test
+        void testLeftOuterJoinThreeTables() {
+            MultiTenancyStorage.setTenantID(4);
 
-        Result<Record> fetch = dslContext
-                .select(userTable.fields())
-                .select(orderTable.fields())
-                .select(orderDetailTable.fields())
-                .from(userTable)
-                .leftOuterJoin(orderTable)
-                .on(userTable.field("user_id")
-                        .eq(orderTable.field("user_id")))
-                .leftOuterJoin(orderDetailTable)
-                .on(orderTable.field("order_id")
-                        .eq(orderDetailTable.field("order_id")))
-                .fetch();
+            Result<Record> fetch = dslContext
+                    .select(userTable.fields())
+                    .select(orderTable.fields())
+                    .select(orderDetailTable.fields())
+                    .from(userTable)
+                    .leftOuterJoin(orderTable)
+                    .on(userTable.field("user_id")
+                            .eq(orderTable.field("user_id")))
+                    .leftOuterJoin(orderDetailTable)
+                    .on(orderTable.field("order_id")
+                            .eq(orderDetailTable.field("order_id")))
+                    .fetch();
 
-        MultiTenancyStorage.setTenantID(null);
+            MultiTenancyStorage.setTenantID(null);
 
-        Assertions.assertEquals(2, fetch.size());
-    }
+            Assertions.assertEquals(2, fetch.size());
+        }
 
-    @Test
-    void testRightOuterJoinThreeTables() {
-        MultiTenancyStorage.setTenantID(9);
+        @Test
+        void testRightOuterJoinThreeTables() {
+            MultiTenancyStorage.setTenantID(9);
 
-        Result<Record> fetch = dslContext
-                .select(userTable.fields())
-                .select(orderTable.fields())
-                .select(orderDetailTable.fields())
-                .from(userTable)
-                .rightOuterJoin(orderTable)
-                .on(userTable.field("user_id")
-                        .eq(orderTable.field("user_id")))
-                .rightOuterJoin(orderDetailTable)
-                .on(orderTable.field("order_id")
-                        .eq(orderDetailTable.field("order_id")))
-                .fetch();
+            Result<Record> fetch = dslContext
+                    .select(userTable.fields())
+                    .select(orderTable.fields())
+                    .select(orderDetailTable.fields())
+                    .from(userTable)
+                    .rightOuterJoin(orderTable)
+                    .on(userTable.field("user_id")
+                            .eq(orderTable.field("user_id")))
+                    .rightOuterJoin(orderDetailTable)
+                    .on(orderTable.field("order_id")
+                            .eq(orderDetailTable.field("order_id")))
+                    .fetch();
 
-        MultiTenancyStorage.setTenantID(null);
+            MultiTenancyStorage.setTenantID(null);
 
-        Assertions.assertEquals(6, fetch.size());
+            Assertions.assertEquals(6, fetch.size());
+        }
     }
 }

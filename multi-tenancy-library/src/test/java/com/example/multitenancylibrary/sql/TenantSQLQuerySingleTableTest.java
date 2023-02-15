@@ -1,8 +1,8 @@
 package com.example.multitenancylibrary.sql;
 
 import com.example.multitenancylibrary.network.MultiTenancyStorage;
-import org.jooq.*;
 import org.jooq.Record;
+import org.jooq.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,8 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
-
-import static org.jooq.impl.DSL.name;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -36,6 +34,21 @@ class TenantSQLQuerySingleTableTest {
         Result<Record> fetch = dslContext
                 .select()
                 .from(userTable)
+                .fetch();
+
+        MultiTenancyStorage.setTenantID(null);
+
+        Assertions.assertEquals(2, fetch.size());
+    }
+
+    @Test
+    void testUserTableQueryWithWhere() {
+        MultiTenancyStorage.setTenantID(4);
+
+        Result<Record> fetch = dslContext
+                .select()
+                .from(userTable)
+                .where(userTable.field("tenant_id", Integer.class).eq(4))
                 .fetch();
 
         MultiTenancyStorage.setTenantID(null);
@@ -71,5 +84,19 @@ class TenantSQLQuerySingleTableTest {
         MultiTenancyStorage.setTenantID(null);
 
         Assertions.assertEquals(2, userId.size());
+    }
+
+    @Test
+    void testUserTableQueryCount() {
+        MultiTenancyStorage.setTenantID(1);
+
+        int count = dslContext
+                .selectCount()
+                .from(userTable)
+                .fetchOne(0, int.class);
+
+        MultiTenancyStorage.setTenantID(null);
+
+        Assertions.assertEquals(3, count);
     }
 }
