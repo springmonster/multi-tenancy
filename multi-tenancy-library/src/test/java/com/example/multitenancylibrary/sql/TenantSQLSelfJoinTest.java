@@ -27,7 +27,7 @@ public class TenantSQLSelfJoinTest {
 
     @BeforeEach
     public void beforeEach() {
-        List<Table<?>> tables = dslContext.meta().getTables(name("PUBLIC", "t_department"));
+        List<Table<?>> tables = dslContext.meta().getTables("t_department");
         departmentTable = tables.get(0);
     }
 

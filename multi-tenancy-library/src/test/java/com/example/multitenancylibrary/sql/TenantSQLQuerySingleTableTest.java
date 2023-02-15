@@ -25,7 +25,7 @@ class TenantSQLQuerySingleTableTest {
 
     @BeforeEach
     public void beforeEach() {
-        List<Table<?>> tables = dslContext.meta().getTables(name("PUBLIC", "t_user"));
+        List<Table<?>> tables = dslContext.meta().getTables("t_user");
         userTable = tables.get(0);
     }
 

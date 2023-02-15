@@ -15,7 +15,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 import java.util.UUID;
 
-import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.row;
 
 @SpringBootTest
@@ -29,7 +28,7 @@ class TenantSQLUpdateTest {
 
     @BeforeEach
     public void beforeEach() {
-        List<Table<?>> tables = dslContext.meta().getTables(name("PUBLIC", "t_user"));
+        List<Table<?>> tables = dslContext.meta().getTables("t_user");
         userTable = tables.get(0);
     }
 

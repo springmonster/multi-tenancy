@@ -31,13 +31,13 @@ class TenantSQLQueryThreeTableTest {
 
     @BeforeEach
     public void beforeEach() {
-        List<Table<?>> tables = dslContext.meta().getTables(name("PUBLIC", "t_user"));
+        List<Table<?>> tables = dslContext.meta().getTables("t_user");
         userTable = tables.get(0);
 
-        List<Table<?>> tables1 = dslContext.meta().getTables(name("PUBLIC", "t_order"));
+        List<Table<?>> tables1 = dslContext.meta().getTables("t_order");
         orderTable = tables1.get(0);
 
-        List<Table<?>> tables2 = dslContext.meta().getTables(name("PUBLIC", "t_order_detail"));
+        List<Table<?>> tables2 = dslContext.meta().getTables("t_order_detail");
         orderDetailTable = tables2.get(0);
     }
 

@@ -14,8 +14,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
-import static org.jooq.impl.DSL.name;
-
 @SpringBootTest
 @ActiveProfiles("test")
 class TenantSQLDeleteTest {
@@ -27,7 +25,7 @@ class TenantSQLDeleteTest {
 
     @BeforeEach
     public void beforeEach() {
-        List<Table<?>> tables = dslContext.meta().getTables(name("PUBLIC", "t_user"));
+        List<Table<?>> tables = dslContext.meta().getTables("t_user");
         userTable = tables.get(0);
     }
 
