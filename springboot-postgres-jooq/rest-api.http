@@ -14,6 +14,11 @@ GET http://localhost:8081/users
 Content-Type: application/json
 X-TenantID: 1
 
+### 1.1 get all users alias
+GET http://localhost:8081/users-alias
+Content-Type: application/json
+X-TenantID: 1
+
 ### 2 get all orders
 GET http://localhost:8081/orders
 Content-Type: application/json

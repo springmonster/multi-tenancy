@@ -72,10 +72,8 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
 
             String tableName = getOriginalOrAliasTableName(table);
 
-            boolean isConditionExist = isConditionExistInSQL(originalSQL, createWhereInCondition(tableName))
-                    || isConditionExistInSQL(originalSQL, createWhereEqCondition(tableName))
-                    || isConditionExistInSQL(originalSQL, createAndInCondition(tableName))
-                    || isConditionExistInSQL(originalSQL, createAndEqCondition(tableName));
+            boolean isConditionExist = isConditionExistInSQL(originalSQL, createEqCondition(tableName))
+                    || isConditionExistInSQL(originalSQL, createInCondition(tableName));
 
             if (!isConditionExist) {
                 throw new TenantIDException("Tenant conditions does not exist in table " + tableName);
@@ -83,19 +81,8 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
         }
     }
 
-    private String createWhereInCondition(String tableName) {
-        return " where " +
-                tableName +
-                "." +
-                "\"" +
-                this.multiTenancyProperties.getTenantIdentifier() +
-                "\"" +
-                " in ";
-    }
-
-    private String createWhereEqCondition(String tableName) {
-        return " where " +
-                tableName +
+    private String createEqCondition(String tableName) {
+        return tableName +
                 "." +
                 "\"" +
                 this.multiTenancyProperties.getTenantIdentifier() +
@@ -103,24 +90,13 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
                 " = ";
     }
 
-    private String createAndInCondition(String tableName) {
-        return " and " +
-                tableName +
+    private String createInCondition(String tableName) {
+        return tableName +
                 "." +
                 "\"" +
                 this.multiTenancyProperties.getTenantIdentifier() +
                 "\"" +
                 " in ";
-    }
-
-    private String createAndEqCondition(String tableName) {
-        return " and " +
-                tableName +
-                "." +
-                "\"" +
-                this.multiTenancyProperties.getTenantIdentifier() +
-                "\"" +
-                " = ";
     }
 
     private String getOriginalOrAliasTableName(Table table) {

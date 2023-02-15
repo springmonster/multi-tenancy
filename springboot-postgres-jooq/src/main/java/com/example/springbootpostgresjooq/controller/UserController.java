@@ -26,12 +26,18 @@ public class UserController {
                 .fetchInto(TUser.class);
     }
 
+    @GetMapping("/users-alias")
+    public List<TUser> getUsersAlias() {
+        return dslContext.selectFrom(Tables.T_USER.as("t_alias_user"))
+                .fetchInto(TUser.class);
+    }
+
     @GetMapping("/users-orders")
     public Map<TUser, List<TOrder>> getUsersOrders() {
         return dslContext.select(T_USER.fields())
                 .select(T_ORDER.fields())
                 .from(T_USER)
-                .join(T_ORDER)
+                .rightJoin(T_ORDER)
                 .on(T_USER.USER_ID.eq(T_ORDER.USER_ID))
                 .fetchGroups(
                         r -> r.into(T_USER).into(TUser.class),

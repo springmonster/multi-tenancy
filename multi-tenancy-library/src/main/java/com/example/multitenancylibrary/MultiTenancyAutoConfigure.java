@@ -32,5 +32,4 @@ public class MultiTenancyAutoConfigure {
     public ExecuteListenerProvider executeListenerProvider() {
         return () -> new TenantIDCheckerExecuteListener(multiTenancyProperties);
     }
-
 }

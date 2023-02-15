@@ -34,3 +34,5 @@ out/
 
 ### VS Code ###
 .vscode/
+/multi-tenancy-library/testdb.trace.db
+/multi-tenancy-library/testdb.mv.db

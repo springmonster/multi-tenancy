@@ -2,35 +2,17 @@ package com.example.multitenancylibrary.sql;
 
 import com.example.multitenancylibrary.config.MultiTenancyProperties;
 import com.example.multitenancylibrary.network.MultiTenancyStorage;
-import org.jooq.Clause;
-import org.jooq.Condition;
-import org.jooq.Field;
-import org.jooq.Operator;
-import org.jooq.QueryPart;
-import org.jooq.Table;
-import org.jooq.VisitContext;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultVisitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Arrays.asList;
-import static org.jooq.Clause.DELETE;
-import static org.jooq.Clause.DELETE_DELETE;
-import static org.jooq.Clause.DELETE_WHERE;
-import static org.jooq.Clause.INSERT;
-import static org.jooq.Clause.SELECT;
-import static org.jooq.Clause.SELECT_FROM;
-import static org.jooq.Clause.SELECT_WHERE;
-import static org.jooq.Clause.TABLE_ALIAS;
-import static org.jooq.Clause.UPDATE;
-import static org.jooq.Clause.UPDATE_UPDATE;
-import static org.jooq.Clause.UPDATE_WHERE;
+import static org.jooq.Clause.*;
 
 @Component
 public class TenantIDModifierVisitListener extends DefaultVisitListener {
@@ -42,19 +24,33 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         this.multiTenancyProperties = multiTenancyProperties;
     }
 
-    private void pushConditionAndWhere(VisitContext context) {
-        getConditionStack(context).push(new ArrayList<>());
+    private void pushConditionAndWhereAndOn(VisitContext context) {
+        getConditionStack(context).push(new LinkedHashSet<>());
         getWhereStack(context).push(false);
+        getOnStack(context).push(new LinkedHashSet<>());
     }
 
-    private void popConditionAndWhere(VisitContext context) {
-        getWhereStack(context).pop();
+    private void popConditionAndWhereAndOn(VisitContext context) {
         getConditionStack(context).pop();
+        getWhereStack(context).pop();
+        getOnStack(context).pop();
     }
 
-    private Deque<List<Condition>> getConditionStack(VisitContext context) {
+    private Deque<LinkedHashSet<Condition>> getConditionStack(VisitContext context) {
         String conditions = "conditions";
-        Deque<List<Condition>> data = (Deque<List<Condition>>) context.data(conditions);
+        Deque<LinkedHashSet<Condition>> data = (Deque<LinkedHashSet<Condition>>) context.data(conditions);
+
+        if (data == null) {
+            data = new ArrayDeque<>();
+            context.data(conditions, data);
+        }
+
+        return data;
+    }
+
+    private Deque<LinkedHashSet<Condition>> getOnStack(VisitContext context) {
+        String conditions = "on";
+        Deque<LinkedHashSet<Condition>> data = (Deque<LinkedHashSet<Condition>>) context.data(conditions);
 
         if (data == null) {
             data = new ArrayDeque<>();
@@ -76,11 +72,15 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         return data;
     }
 
-    private List<Condition> peekConditions(VisitContext context) {
+    private LinkedHashSet<Condition> peekConditions(VisitContext context) {
         return getConditionStack(context).peek();
     }
 
-    private boolean peekWhere(VisitContext context) {
+    private LinkedHashSet<Condition> peekOns(VisitContext context) {
+        return getOnStack(context).peek();
+    }
+
+    private Boolean peekWheres(VisitContext context) {
         return getWhereStack(context).peek();
     }
 
@@ -92,40 +92,45 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     private <E> void addConditions(VisitContext context, Table<?> table, Field<E> field, E... values) {
         QueryPart queryPart = context.queryPart();
 
-        if (queryPart instanceof Table) {
-            Table queryTable = (Table) queryPart;
-            if (queryTable.getName().equals(table.getName())) {
-                List<Clause> clauses = getClauses(context);
+        if (queryPart instanceof Table<?> queryTable) {
+            if (!queryTable.getName().equals(table.getName())) {
+                return;
+            }
 
-                if (clauses.contains(SELECT_FROM) ||
-                        clauses.contains(UPDATE_UPDATE) ||
-                        clauses.contains(DELETE_DELETE)) {
+            List<Clause> clauses = getClauses(context);
 
-                    if (clauses.contains(TABLE_ALIAS)) {
-                        QueryPart[] parts = context.queryParts();
+            if (clauses.contains(SELECT_FROM) ||
+                    clauses.contains(UPDATE_UPDATE) ||
+                    clauses.contains(DELETE_DELETE)) {
+                field = getTableAlias(context, field, clauses);
+                peekConditions(context).add(field.in(values));
+            }
+        }
+    }
 
-                        for (int i = parts.length - 2; i >= 0; i--) {
-                            if (parts[i] instanceof Table) {
-                                field = ((Table<?>) parts[i]).field(field);
-                                break;
-                            }
-                        }
-                    }
+    private static <E> Field<E> getTableAlias(VisitContext context, Field<E> field, List<Clause> clauses) {
+        if (clauses.contains(TABLE_ALIAS)) {
+            QueryPart[] parts = context.queryParts();
 
-                    peekConditions(context).add(field.in(values));
+            for (int i = parts.length - 2; i >= 0; i--) {
+                if (parts[i] instanceof Table) {
+                    field = ((Table<?>) parts[i]).field(field);
+                    break;
                 }
             }
         }
+        return field;
     }
 
     List<Clause> getClauses(VisitContext context) {
         List<Clause> result = asList(context.clauses());
         int index = result.lastIndexOf(SELECT);
 
-        if (index > 0)
+        if (index > 0) {
             return result.subList(index, result.size() - 1);
-        else
+        } else {
             return result;
+        }
     }
 
     @Override
@@ -134,33 +139,92 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                 context.clause() == UPDATE ||
                 context.clause() == DELETE ||
                 context.clause() == INSERT) {
-            pushConditionAndWhere(context);
+            pushConditionAndWhereAndOn(context);
         }
     }
 
     @Override
     public void clauseEnd(VisitContext context) {
-        if (context.clause() == SELECT_WHERE ||
+        if (context.clause() == TABLE_JOIN_OUTER_LEFT) {
+            autoExtendOuterJoin(context, true);
+        } else if (context.clause() == TABLE_JOIN_OUTER_RIGHT) {
+            autoExtendOuterJoin(context, false);
+        } else if (context.clause() == SELECT_WHERE ||
                 context.clause() == UPDATE_WHERE ||
                 context.clause() == DELETE_WHERE) {
-            List<Condition> conditions = peekConditions(context);
-
-            if (conditions.size() > 0) {
-                context.context()
-                        .formatSeparator()
-                        .keyword(peekWhere(context) ? "and" : "where")
-                        .sql(' ');
-
-                context.context().visit(DSL.condition(Operator.AND, conditions));
-            }
+            autoExtendSelectUpdateDelete(context);
         }
 
         if (context.clause() == SELECT ||
                 context.clause() == UPDATE ||
                 context.clause() == DELETE ||
                 context.clause() == INSERT) {
-            popConditionAndWhere(context);
+            popConditionAndWhereAndOn(context);
         }
+    }
+
+    private void autoExtendOuterJoin(VisitContext context, boolean isLeftOuterJoin) {
+        LinkedHashSet<Condition> conditions = peekConditions(context);
+        if (conditions == null || conditions.isEmpty()) {
+            return;
+        }
+
+        QueryPart[] queryParts = context.queryParts();
+        String secondaryTable = null;
+        for (QueryPart queryPart : queryParts) {
+            secondaryTable = getOuterJoinSecondaryTableName(queryPart, isLeftOuterJoin);
+        }
+
+        List<Condition> finalRTableConditions = new ArrayList<>();
+        for (Condition condition : conditions) {
+            if (secondaryTable != null && condition.toString().contains(secondaryTable)) {
+                finalRTableConditions.add(condition);
+            }
+        }
+
+        if (!finalRTableConditions.isEmpty()) {
+            peekOns(context).addAll(finalRTableConditions);
+
+            context.context()
+                    .formatSeparator()
+                    .keyword("and")
+                    .sql(' ');
+
+            context.context().visit(DSL.condition(Operator.AND, finalRTableConditions));
+        }
+    }
+
+    private void autoExtendSelectUpdateDelete(VisitContext context) {
+        LinkedHashSet<Condition> conditions = peekConditions(context);
+        if (conditions == null || conditions.isEmpty()) {
+            return;
+        }
+
+        LinkedHashSet<Condition> ons = peekOns(context);
+        conditions.removeAll(ons);
+
+        if (!conditions.isEmpty()) {
+            context.context()
+                    .formatSeparator()
+                    .keyword(peekWheres(context) ? "and" : "where")
+                    .sql(' ');
+            context.context().visit(DSL.condition(Operator.AND, conditions));
+        }
+    }
+
+    private String getOuterJoinSecondaryTableName(QueryPart queryPart, boolean isLeftOuterJoin) {
+        try {
+            Class<?> joinTable = Class.forName("org.jooq.impl.JoinTable");
+            if (joinTable.isAssignableFrom(queryPart.getClass())) {
+                Object joinTableObj = joinTable.cast(queryPart);
+
+                java.lang.reflect.Field table = ReflectionUtils.findField(joinTable, isLeftOuterJoin ? "rhs" : "lhs");
+                ReflectionUtils.makeAccessible(table);
+                return ((Table<?>) ReflectionUtils.getField(table, joinTableObj)).getName();
+            }
+        } catch (ClassNotFoundException ignored) {
+        }
+        return null;
     }
 
     @Override
