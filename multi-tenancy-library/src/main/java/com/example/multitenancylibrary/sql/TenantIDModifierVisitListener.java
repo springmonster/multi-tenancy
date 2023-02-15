@@ -9,10 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static org.jooq.Clause.*;
@@ -28,9 +25,9 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     }
 
     private void pushConditionAndWhereAndOn(VisitContext context) {
-        getConditionStack(context).push(new ArrayList<>());
+        getConditionStack(context).push(new LinkedHashSet<>());
         getWhereStack(context).push(false);
-        getOnStack(context).push(new ArrayList<>());
+        getOnStack(context).push(new LinkedHashSet<>());
     }
 
     private void popConditionAndWhereAndOn(VisitContext context) {
@@ -39,9 +36,9 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         getOnStack(context).pop();
     }
 
-    private Deque<List<Condition>> getConditionStack(VisitContext context) {
+    private Deque<LinkedHashSet<Condition>> getConditionStack(VisitContext context) {
         String conditions = "conditions";
-        Deque<List<Condition>> data = (Deque<List<Condition>>) context.data(conditions);
+        Deque<LinkedHashSet<Condition>> data = (Deque<LinkedHashSet<Condition>>) context.data(conditions);
 
         if (data == null) {
             data = new ArrayDeque<>();
@@ -51,9 +48,9 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         return data;
     }
 
-    private Deque<List<Condition>> getOnStack(VisitContext context) {
+    private Deque<LinkedHashSet<Condition>> getOnStack(VisitContext context) {
         String conditions = "on";
-        Deque<List<Condition>> data = (Deque<List<Condition>>) context.data(conditions);
+        Deque<LinkedHashSet<Condition>> data = (Deque<LinkedHashSet<Condition>>) context.data(conditions);
 
         if (data == null) {
             data = new ArrayDeque<>();
@@ -75,15 +72,15 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
         return data;
     }
 
-    private List<Condition> peekConditions(VisitContext context) {
+    private LinkedHashSet<Condition> peekConditions(VisitContext context) {
         return getConditionStack(context).peek();
     }
 
-    private List<Condition> peekOns(VisitContext context) {
+    private LinkedHashSet<Condition> peekOns(VisitContext context) {
         return getOnStack(context).peek();
     }
 
-    private boolean peekWheres(VisitContext context) {
+    private Boolean peekWheres(VisitContext context) {
         return getWhereStack(context).peek();
     }
 
@@ -95,8 +92,7 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     private <E> void addConditions(VisitContext context, Table<?> table, Field<E> field, E... values) {
         QueryPart queryPart = context.queryPart();
 
-        if (queryPart instanceof Table) {
-            Table queryTable = (Table) queryPart;
+        if (queryPart instanceof Table<?> queryTable) {
             if (!queryTable.getName().equals(table.getName())) {
                 return;
             }
@@ -168,11 +164,10 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     }
 
     private void autoExtendOuterJoin(VisitContext context, boolean isLeftOuterJoin) {
-        List<Condition> conditions = peekConditions(context);
-        if (conditions.isEmpty()) {
+        LinkedHashSet<Condition> conditions = peekConditions(context);
+        if (conditions == null || conditions.isEmpty()) {
             return;
         }
-        removeDuplicatedConditions(conditions);
 
         QueryPart[] queryParts = context.queryParts();
         String secondaryTable = null;
@@ -200,13 +195,12 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
     }
 
     private void autoExtendSelectUpdateDelete(VisitContext context) {
-        List<Condition> conditions = peekConditions(context);
-        if (conditions.isEmpty()) {
+        LinkedHashSet<Condition> conditions = peekConditions(context);
+        if (conditions == null || conditions.isEmpty()) {
             return;
         }
-        removeDuplicatedConditions(conditions);
 
-        List<Condition> ons = peekOns(context);
+        LinkedHashSet<Condition> ons = peekOns(context);
         conditions.removeAll(ons);
 
         if (!conditions.isEmpty()) {
@@ -216,12 +210,6 @@ public class TenantIDModifierVisitListener extends DefaultVisitListener {
                     .sql(' ');
             context.context().visit(DSL.condition(Operator.AND, conditions));
         }
-    }
-
-    private static void removeDuplicatedConditions(List<Condition> conditions) {
-        List<Condition> collect = conditions.stream().distinct().toList();
-        conditions.clear();
-        conditions.addAll(collect);
     }
 
     private String getOuterJoinSecondaryTableName(QueryPart queryPart, boolean isLeftOuterJoin) {
