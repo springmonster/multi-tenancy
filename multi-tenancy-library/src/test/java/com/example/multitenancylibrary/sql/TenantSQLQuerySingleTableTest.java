@@ -8,6 +8,8 @@ import org.jooq.Result;
 import org.jooq.Table;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -103,58 +105,62 @@ class TenantSQLQuerySingleTableTest {
         Assertions.assertEquals(3, count);
     }
 
-    @Test
-    void testUserTablePlainQueryThrowsException() {
-        Assertions.assertThrows(TenantIDException.class, () -> {
-            MultiTenancyStorage.setTenantID(1);
+    @Nested
+    @DisplayName("Plain SQL")
+    class PlainSQLTest {
+        @Test
+        void testUserTablePlainQueryThrowsException() {
+            Assertions.assertThrows(TenantIDException.class, () -> {
+                MultiTenancyStorage.setTenantID(1);
 
-            dslContext.fetch("select * from t_user");
+                dslContext.fetch("select * from t_user");
+
+                MultiTenancyStorage.setTenantID(null);
+            });
+        }
+
+        @Test
+        void testUserTablePlainQueryWithWhereThrowsException() {
+            Assertions.assertThrows(TenantIDException.class, () -> {
+                MultiTenancyStorage.setTenantID(1);
+
+                dslContext.fetch("select * from t_user where 1 = 1");
+
+                MultiTenancyStorage.setTenantID(null);
+            });
+        }
+
+        @Test
+        void testUserTablePlainQueryWithSchemaThrowsException() {
+            Assertions.assertThrows(TenantIDException.class, () -> {
+                MultiTenancyStorage.setTenantID(1);
+
+                dslContext.fetch("select * from public.t_user");
+
+                MultiTenancyStorage.setTenantID(null);
+            });
+        }
+
+        @Test
+        void testUserTablePlainQuery() {
+            MultiTenancyStorage.setTenantID(2);
+
+            Result<Record> fetch = dslContext.fetch("select * from t_user where tenant_id = 1");
+            Assertions.assertEquals(3, fetch.size());
+
+            Result<Record> fetch1 = dslContext.fetch("select * from public.t_user where t_user.tenant_id = 1");
+            Assertions.assertEquals(3, fetch1.size());
+
+            Result<Record> fetch2 = dslContext.fetch("select * from public.t_user where public.t_user.tenant_id = 1");
+            Assertions.assertEquals(3, fetch2.size());
+
+            Result<Record> fetch3 = dslContext.fetch("select * from public.t_user where public.t_user.tenant_id = 1");
+            Assertions.assertEquals(3, fetch3.size());
+
+            Result<Record> fetch4 = dslContext.fetch("select * from public.t_user where 1=1 and public.t_user.tenant_id = 1");
+            Assertions.assertEquals(3, fetch4.size());
 
             MultiTenancyStorage.setTenantID(null);
-        });
-    }
-
-    @Test
-    void testUserTablePlainQueryWithWhereThrowsException() {
-        Assertions.assertThrows(TenantIDException.class, () -> {
-            MultiTenancyStorage.setTenantID(1);
-
-            dslContext.fetch("select * from t_user where 1 = 1");
-
-            MultiTenancyStorage.setTenantID(null);
-        });
-    }
-
-    @Test
-    void testUserTablePlainQueryWithSchemaThrowsException() {
-        Assertions.assertThrows(TenantIDException.class, () -> {
-            MultiTenancyStorage.setTenantID(1);
-
-            dslContext.fetch("select * from public.t_user");
-
-            MultiTenancyStorage.setTenantID(null);
-        });
-    }
-
-    @Test
-    void testUserTablePlainQuery() {
-        MultiTenancyStorage.setTenantID(2);
-
-        Result<Record> fetch = dslContext.fetch("select * from t_user where tenant_id = 1");
-        Assertions.assertEquals(3, fetch.size());
-
-        Result<Record> fetch1 = dslContext.fetch("select * from public.t_user where t_user.tenant_id = 1");
-        Assertions.assertEquals(3, fetch1.size());
-
-        Result<Record> fetch2 = dslContext.fetch("select * from public.t_user where public.t_user.tenant_id = 1");
-        Assertions.assertEquals(3, fetch2.size());
-
-        Result<Record> fetch3 = dslContext.fetch("select * from public.t_user where public.t_user.tenant_id = 1");
-        Assertions.assertEquals(3, fetch3.size());
-
-        Result<Record> fetch4 = dslContext.fetch("select * from public.t_user where 1=1 and public.t_user.tenant_id = 1");
-        Assertions.assertEquals(3, fetch4.size());
-
-        MultiTenancyStorage.setTenantID(null);
+        }
     }
 }
