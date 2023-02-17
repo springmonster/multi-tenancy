@@ -73,7 +73,9 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
             String tableName = getOriginalOrAliasTableName(table);
 
             boolean isConditionExist = isConditionExistInSQL(originalSQL, createEqCondition(tableName))
-                    || isConditionExistInSQL(originalSQL, createInCondition(tableName));
+                    || isConditionExistInSQL(originalSQL, createInCondition(tableName))
+                    || isConditionExistInSQL(originalSQL, createEqConditionOfPlainSQL(tableName))
+                    || isConditionExistInSQL(originalSQL, createInConditionOfPlainSQL(tableName));
 
             if (!isConditionExist) {
                 throw new TenantIDException("Tenant conditions does not exist in table " + tableName);
@@ -99,6 +101,20 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
                 " in ";
     }
 
+    private String createEqConditionOfPlainSQL(String tableName) {
+        return tableName +
+                "." +
+                this.multiTenancyProperties.getTenantIdentifier() +
+                " = ";
+    }
+
+    private String createInConditionOfPlainSQL(String tableName) {
+        return tableName +
+                "." +
+                this.multiTenancyProperties.getTenantIdentifier() +
+                " in ";
+    }
+
     private String getOriginalOrAliasTableName(Table table) {
         Alias alias = table.getAlias();
         if (alias != null) {
@@ -116,7 +132,8 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
         for (String tableName : multiTenancyProperties.getTables()) {
             String tempTableName = tableName.split("\\.")[1];
             String transformedTempTableName = transformTableName(tempTableName);
-            if (originalTableName.equalsIgnoreCase(transformedTempTableName)) {
+            if (originalTableName.equalsIgnoreCase(transformedTempTableName)
+                    || tableName.contains(originalTableName)) {
                 isTenantTableExist = true;
                 break;
             }

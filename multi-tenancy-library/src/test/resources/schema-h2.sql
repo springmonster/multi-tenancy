@@ -1,9 +1,11 @@
 CREATE SCHEMA IF NOT EXISTS public;
 
+DROP VIEW IF EXISTS v_user;
 DROP TABLE IF EXISTS t_user;
 DROP TABLE IF EXISTS t_order;
 DROP TABLE IF EXISTS t_order_detail;
 DROP TABLE IF EXISTS t_department;
+
 -- t_user
 CREATE TABLE t_user
 (
@@ -37,3 +39,7 @@ CREATE TABLE t_department
     parent_department_id INT,
     tenant_id            INT          NOT NULL
 );
+-- v_user
+CREATE VIEW v_user AS
+SELECT *
+FROM t_user;
