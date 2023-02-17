@@ -37,6 +37,14 @@ class TenantIDCheckerExecuteListenerTest {
         multiTenancyProperties.setTenantIdentifier("org_id");
 
         Assertions.assertThrows(TenantIDException.class, () -> ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "checkSQL", sql2));
+
+        // Exception
+        String sql3 = "select count(*) from (select `alias_1`.`id`, `alias_1`.`org_id`, `alias_1`.`name`, `alias_1`.`description`, `alias_1`.`action_type`, `alias_1`.`scenario_id`, `alias_1`.`save_path`, `alias_1`.`created_by`, `alias_1`.`created_at` from `abc_action_import` as `alias_1`) as `alias_122582596`";
+
+        multiTenancyProperties.setTables(List.of("abc.abc_action_import"));
+        multiTenancyProperties.setTenantIdentifier("org_id");
+
+        Assertions.assertThrows(TenantIDException.class, () -> ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "checkSQL", sql3));
     }
 
     @Test
