@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
@@ -74,8 +76,8 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
 
             boolean isConditionExist = isConditionExistInSQL(originalSQL, createEqCondition(tableName))
                     || isConditionExistInSQL(originalSQL, createInCondition(tableName))
-                    || isConditionExistInSQL(originalSQL, createEqConditionOfPlainSQL(tableName))
-                    || isConditionExistInSQL(originalSQL, createInConditionOfPlainSQL(tableName));
+                    || isConditionExistInSQLRegex(originalSQL);
+            ;
 
             if (!isConditionExist) {
                 throw new TenantIDException("Tenant conditions does not exist in table " + tableName);
@@ -101,20 +103,6 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
                 " in ";
     }
 
-    private String createEqConditionOfPlainSQL(String tableName) {
-        return tableName +
-                "." +
-                this.multiTenancyProperties.getTenantIdentifier() +
-                " = ";
-    }
-
-    private String createInConditionOfPlainSQL(String tableName) {
-        return tableName +
-                "." +
-                this.multiTenancyProperties.getTenantIdentifier() +
-                " in ";
-    }
-
     private String getOriginalOrAliasTableName(Table table) {
         Alias alias = table.getAlias();
         if (alias != null) {
@@ -125,6 +113,12 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
 
     private boolean isConditionExistInSQL(String sql, String condition) {
         return sql.contains(condition);
+    }
+
+    private boolean isConditionExistInSQLRegex(String sql) {
+        Pattern p = Pattern.compile(".*where.*" + this.multiTenancyProperties.getTenantIdentifier() + "\\s+(in|=).*");
+        Matcher m = p.matcher(sql);
+        return m.matches();
     }
 
     private boolean checkTable(String originalTableName) {

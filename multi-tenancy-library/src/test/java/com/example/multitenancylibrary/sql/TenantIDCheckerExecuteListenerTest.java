@@ -51,4 +51,39 @@ class TenantIDCheckerExecuteListenerTest {
 
         Assertions.assertDoesNotThrow(() -> ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "checkSQL", sql));
     }
+
+    @Test
+    void checkSQLRegex() {
+        String sql1 = "select * from t_user where t_user.tenant_id in 1";
+        String sql2 = "select * from t_user where t_user.tenant_id = 1";
+        String sql3 = "select * from t_user where 1=1 and t_user.tenant_id in 1";
+        String sql4 = "select * from t_user where 1=1 and t_user.tenant_id = 1";
+        String sql5 = "select * from t_user where 1=1";
+        String sql6 = "select * from t_user";
+        String sql7 = "update t_user set tenant_id = 1 where 1=1";
+        String sql8 = "delete from t_user where 1=1";
+
+        MultiTenancyProperties multiTenancyProperties = new MultiTenancyProperties();
+        multiTenancyProperties.setTables(List.of("public.t_user"));
+        multiTenancyProperties.setTenantIdentifier("tenant_id");
+
+        TenantIDCheckerExecuteListener tenantIDCheckerExecuteListener = new TenantIDCheckerExecuteListener(multiTenancyProperties);
+
+        Boolean b1 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql1);
+        Boolean b2 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql2);
+        Boolean b3 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql3);
+        Boolean b4 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql4);
+        Boolean b5 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql5);
+        Boolean b6 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql6);
+        Boolean b7 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql7);
+        Boolean b8 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql8);
+        Assertions.assertEquals(Boolean.TRUE, b1);
+        Assertions.assertEquals(Boolean.TRUE, b2);
+        Assertions.assertEquals(Boolean.TRUE, b3);
+        Assertions.assertEquals(Boolean.TRUE, b4);
+        Assertions.assertEquals(Boolean.FALSE, b5);
+        Assertions.assertEquals(Boolean.FALSE, b6);
+        Assertions.assertEquals(Boolean.FALSE, b7);
+        Assertions.assertEquals(Boolean.FALSE, b8);
+    }
 }
