@@ -74,33 +74,12 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
 
             String tableName = getOriginalOrAliasTableName(table);
 
-            boolean isConditionExist = isConditionExistInSQL(originalSQL, createEqCondition(tableName))
-                    || isConditionExistInSQL(originalSQL, createInCondition(tableName))
-                    || isConditionExistInSQLRegex(originalSQL);
-            ;
+            boolean isConditionExist = isConditionExistInSQLRegex(originalSQL);
 
             if (!isConditionExist) {
                 throw new TenantIDException("Tenant conditions does not exist in table " + tableName);
             }
         }
-    }
-
-    private String createEqCondition(String tableName) {
-        return tableName +
-                "." +
-                "\"" +
-                this.multiTenancyProperties.getTenantIdentifier() +
-                "\"" +
-                " = ";
-    }
-
-    private String createInCondition(String tableName) {
-        return tableName +
-                "." +
-                "\"" +
-                this.multiTenancyProperties.getTenantIdentifier() +
-                "\"" +
-                " in ";
     }
 
     private String getOriginalOrAliasTableName(Table table) {
@@ -111,12 +90,8 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
         return table.getFullyQualifiedName();
     }
 
-    private boolean isConditionExistInSQL(String sql, String condition) {
-        return sql.contains(condition);
-    }
-
     private boolean isConditionExistInSQLRegex(String sql) {
-        Pattern p = Pattern.compile(".*where.*" + this.multiTenancyProperties.getTenantIdentifier() + "\\s+(in|=).*");
+        Pattern p = Pattern.compile(".*(where|and).*" + this.multiTenancyProperties.getTenantIdentifier() + ".*(in|=).*");
         Matcher m = p.matcher(sql);
         return m.matches();
     }
