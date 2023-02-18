@@ -91,7 +91,7 @@ public class TenantIDCheckerExecuteListener extends DefaultExecuteListener {
     }
 
     private boolean isConditionExistInSQLRegex(String sql) {
-        Pattern p = Pattern.compile(".*(where|and).*" + this.multiTenancyProperties.getTenantIdentifier() + ".*(in|=).*");
+        Pattern p = Pattern.compile(".*(where|and).*" + this.multiTenancyProperties.getTenantIdentifier() + ".*(in|=).*", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(sql);
         return m.matches();
     }

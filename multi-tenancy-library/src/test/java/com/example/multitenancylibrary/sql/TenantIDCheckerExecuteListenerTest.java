@@ -70,6 +70,10 @@ class TenantIDCheckerExecuteListenerTest {
         String sql6 = "select * from t_user";
         String sql7 = "update t_user set tenant_id = 1 where 1=1";
         String sql8 = "delete from t_user where 1=1";
+        String sql9 = "SELECT FROM t_user WHERE t_user.tenant_id IN 1";
+        String sql10 = "SELECT FROM t_user WHERE t_user.tenant_id = 1";
+        String sql11 = "SELECT FROM T_USER WHERE T_USER.TENANT_ID IN 1";
+        String sql12 = "SELECT FROM T_USER WHERE T_USER.TENANT_ID = 1";
 
         MultiTenancyProperties multiTenancyProperties = new MultiTenancyProperties();
         multiTenancyProperties.setTables(List.of("public.t_user"));
@@ -85,13 +89,23 @@ class TenantIDCheckerExecuteListenerTest {
         Boolean b6 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql6);
         Boolean b7 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql7);
         Boolean b8 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql8);
-        Assertions.assertEquals(Boolean.TRUE, b1);
-        Assertions.assertEquals(Boolean.TRUE, b2);
-        Assertions.assertEquals(Boolean.TRUE, b3);
-        Assertions.assertEquals(Boolean.TRUE, b4);
-        Assertions.assertEquals(Boolean.FALSE, b5);
-        Assertions.assertEquals(Boolean.FALSE, b6);
-        Assertions.assertEquals(Boolean.FALSE, b7);
-        Assertions.assertEquals(Boolean.FALSE, b8);
+        Boolean b9 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql9);
+        Boolean b10 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql10);
+        Boolean b11 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql11);
+        Boolean b12 = ReflectionTestUtils.invokeMethod(tenantIDCheckerExecuteListener, "isConditionExistInSQLRegex", sql12);
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(Boolean.TRUE, b1),
+                () -> Assertions.assertEquals(Boolean.TRUE, b2),
+                () -> Assertions.assertEquals(Boolean.TRUE, b3),
+                () -> Assertions.assertEquals(Boolean.TRUE, b4),
+                () -> Assertions.assertEquals(Boolean.FALSE, b5),
+                () -> Assertions.assertEquals(Boolean.FALSE, b6),
+                () -> Assertions.assertEquals(Boolean.FALSE, b7),
+                () -> Assertions.assertEquals(Boolean.FALSE, b8),
+                () -> Assertions.assertEquals(Boolean.TRUE, b9),
+                () -> Assertions.assertEquals(Boolean.TRUE, b10),
+                () -> Assertions.assertEquals(Boolean.TRUE, b11),
+                () -> Assertions.assertEquals(Boolean.TRUE, b12)
+        );
     }
 }
